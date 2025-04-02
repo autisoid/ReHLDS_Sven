@@ -1110,7 +1110,7 @@ void SV_SendServerinfo_internal(sizebuf_t *msg, client_t *client)
 	int playernum = NUM_FOR_EDICT(client->edict) - 1;
 	int mungebuffer = g_psv.worldmapCRC;
 
-	COM_Munge3((byte *)&mungebuffer, sizeof(mungebuffer), (-1 - playernum) & 0xFF);
+	//COM_Munge3((byte *)&mungebuffer, sizeof(mungebuffer), (-1 - playernum) & 0xFF);
 	MSG_WriteLong(msg, mungebuffer);
 
 	MSG_WriteBuf(msg, sizeof(g_psv.clientdllmd5), g_psv.clientdllmd5);
@@ -1234,7 +1234,7 @@ void EXT_FUNC SV_SendResources_internal(sizebuf_t *msg)
 	{
 		MSG_WriteBits(r->type, 4);
 		MSG_WriteBitString(r->szFileName);
-		MSG_WriteBits(r->nIndex, RESOURCE_INDEX_BITS);
+		MSG_WriteBits(r->nIndex, 12);
 		MSG_WriteBits(r->nDownloadSize, 24);
 		MSG_WriteBits(r->ucFlags & (RES_WASMISSING | RES_FATALIFMISSING), 3);
 
@@ -1314,7 +1314,7 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 	else
 	{
 		MSG_WriteBits(1, 1);
-		MSG_WriteBits(host_client->delta_sequence, 8);
+		MSG_WriteBits(host_client->delta_sequence, 16);
 		from = &host_client->frames[bits].clientdata;
 	}
 
@@ -1328,7 +1328,7 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 		weapon_data_t *fdata = NULL;
 		weapon_data_t *tdata = frame->weapondata;
 
-		for (int i = 0; i < 64; i++, tdata++)
+		for (int i = 0; i < 256; i++, tdata++)
 		{
 #ifdef REHLDS_FIXES
 			// So, HL and CS games send absolute gametime in these vars, DMC and Ricochet games don't send absolute gametime
@@ -1360,7 +1360,7 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 			if (DELTA_CheckDelta((byte *)fdata, (byte *)tdata, g_pweapondelta))
 			{
 				MSG_WriteBits(1, 1);
-				MSG_WriteBits(i, 6);
+				MSG_WriteBits(i, 8);
 
 #if defined (REHLDS_OPT_PEDANTIC) || defined (REHLDS_FIXES)
 				// all calculations are already done
@@ -1595,7 +1595,7 @@ void SV_New_f(void)
 
 void SV_SendRes_f(void)
 {
-	unsigned char data[NET_MAX_PAYLOAD];
+	unsigned char data[NET_MAX_PAYLOAD * 4];
 	sizebuf_t msg;
 
 	Q_memset(&msg, 0, sizeof(msg));
@@ -1650,7 +1650,7 @@ void EXT_FUNC SV_Spawn_f_internal(void)
 
 	host_client->crcValue = Q_atoi(Cmd_Argv(2));
 
-	COM_UnMunge2((unsigned char *)&host_client->crcValue, 4, (-1 - g_psvs.spawncount) & 0xFF);
+	//COM_UnMunge2((unsigned char *)&host_client->crcValue, 4, (-1 - g_psvs.spawncount) & 0xFF);
 
 	if (cmd_source == src_command)
 	{
@@ -4224,7 +4224,7 @@ void SV_EmitEvents_internal(client_t *cl, packet_entities_t *pack, sizebuf_t *ms
 			if (info->packet_index != -1)
 			{
 				MSG_WriteBits(1, 1);
-				MSG_WriteBits(info->packet_index, 11);
+				MSG_WriteBits(info->packet_index, 10); //Sven Co-op change
 				if (Q_memcmp(&nullargs, &info->args, sizeof(event_args_t)))
 				{
 					MSG_WriteBits(1, 1);
@@ -4314,6 +4314,13 @@ unsigned char* EXT_FUNC SV_FatPVS(float *org)
 	return fatpvs;
 }
 
+//Sven-specific function
+unsigned char* SV_AddPositionToFatPVS(float* org)
+{
+	SV_AddToFatPVS(org, g_psv.worldmodel->nodes);
+	return (unsigned char*) &fatpvs;
+}
+
 void SV_AddToFatPAS(vec_t *org, mnode_t *node)
 {
 	int i;
@@ -4374,6 +4381,13 @@ unsigned char* EXT_FUNC SV_FatPAS(float *org)
 	return fatpas;
 }
 
+//Sven-specific function
+unsigned char* SV_AddPositionToFatPAS(float* org)
+{
+	SV_AddToFatPAS(org, g_psv.worldmodel->nodes);
+	return (unsigned char*)&fatpas;
+}
+
 int SV_PointLeafnum(vec_t *p)
 {
 	mleaf_t *mleaf = Mod_PointInLeaf(p, g_psv.worldmodel);
@@ -4430,7 +4444,7 @@ void SV_WriteDeltaHeader(int num, qboolean remove, qboolean custom, int *numbase
 		if (delta <= 0 || delta > 63)
 		{
 			MSG_WriteBits(1u, 1);
-			MSG_WriteBits(num, 11);
+			MSG_WriteBits(num, 13);
 		}
 		else
 		{
@@ -4571,7 +4585,9 @@ int SV_CreatePacketEntities_internal(sv_delta_t type, client_t *client, packet_e
 
 		MSG_WriteByte(msg, svc_deltapacketentities);    // This is a delta
 		MSG_WriteShort(msg, to->num_entities);          // This is how many ents are in the new packet
-		MSG_WriteByte(msg, client->delta_sequence);     // This is the sequence # that we are updating from
+		MSG_StartBitWriting(msg);
+		MSG_WriteBits(client->delta_sequence, 16);     // This is the sequence # that we are updating from
+		MSG_EndBitWriting(msg);
 	}
 	else
 	{
@@ -5781,8 +5797,12 @@ void SV_PropagateCustomizations(void)
 				pResource = &pCust->resource;
 
 #ifdef REHLDS_FIXES
+				// skip logos if sv_send_logos is 0
 				if ((pResource->ucFlags & RES_CUSTOM) && !sv_send_logos.value)
+				{
+					pCust = pCust->pNext;
 					continue;
+				}
 #endif
 
 				MSG_WriteByte(&host_client->netchan.message, svc_customization);
@@ -5887,7 +5907,7 @@ void SV_CreateBaseline(void)
 		svent = &g_psv.edicts[entnum];
 		if (!svent->free && (g_psvs.maxclients >= entnum || svent->v.modelindex))
 		{
-			MSG_WriteBits(entnum, 11);
+			MSG_WriteBits(entnum, 13);
 			MSG_WriteBits(g_psv.baselines[entnum].entityType, 2);
 			custom = ~g_psv.baselines[entnum].entityType & ENTITY_NORMAL;
 			if (custom)
@@ -6005,6 +6025,10 @@ void SetCStrikeFlags(void)
 		else if (!Q_stricmp(com_gamedir, "tfc"))
 		{
 			g_eGameType = GT_TFC;
+		}
+		else if (!Q_stricmp(com_gamedir, "svencoop"))
+		{
+			g_eGameType = GT_HL1;
 		}
 	}
 }
@@ -6227,9 +6251,10 @@ void EXT_FUNC SV_ActivateServer_internal(int runPhysics)
 #endif
 }
 
-void SV_ServerShutdown(void)
+void SV_ServerShutdown(const char* _MapName)
 {
 	Steam_NotifyOfLevelChange();
+	SV_OnLevelChange(_MapName);
 	gGlobalVariables.time = g_psv.time;
 
 	if (g_psvs.dll_initialized)
@@ -6481,9 +6506,15 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 
 	g_psv.sound_precache[0] = pr_strings;
 	g_psv.model_precache[0] = pr_strings;
-#ifndef REHLDS_FIXES
+#if !defined(REHLDS_FIXES) || defined(REHLDS_SVEN)
 	g_psv.generic_precache[0] = pr_strings;
+#endif // !defined(REHLDS_FIXES) || defined(REHLDS_SVEN)
 
+#if !defined(REHLDS_FIXES) || defined(REHLDS_SVEN)
+	// xWhitey: this is required at least for Half-Life C plugins to function properly
+	// because if the submodels aren't precached, the dedicated server will throw a Sys_Error
+	// because of one of my plugins.
+	// See https://github.com/rehlds/ReHLDS/commit/19c22d75380484150a2876eeba9ec35beaaf89d6#diff-110ffc3aa214a3b4da3e320104b8a776b7329bfb8a61d8c8349cfaa712e800f7R6060 for more info.
 	for (i = 1; i < g_psv.worldmodel->numsubmodels; i++)
 	{
 		g_psv.model_precache[i + 1] = localmodels[i];
@@ -6495,9 +6526,9 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 			int __itmp = i + 1;
 			g_rehlds_sv.modelsMap.put(g_psv.model_precache[i + 1], __itmp);
 		}
-#endif
+#endif // REHLDS_OPT_PEDANTIC
 	}
-#endif // REHLDS_FIXES
+#endif // !defined(REHLDS_FIXES) || defined(REHLDS_SVEN)
 
 	Q_memset(&g_psv.edicts->v, 0, sizeof(entvars_t));
 

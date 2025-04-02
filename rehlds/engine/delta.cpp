@@ -833,7 +833,7 @@ qboolean _DELTA_WriteDelta(unsigned char *from, unsigned char *to, qboolean forc
 		if (callback)
 			callback();
 
-		MSG_WriteBits(bytecount, 3);
+		MSG_WriteBits(bytecount, 4);
 		for (i = 0; i < bytecount; i++)
 		{
 			MSG_WriteBits(( (byte*)bits )[i], 8);
@@ -866,7 +866,7 @@ int DELTA_ParseDelta(unsigned char *from, unsigned char *to, delta_t *pFields)
 	startbit = MSG_CurrentBit();
 	Q_memset(bits, 0, 8);
 
-	nbytes = MSG_ReadBits(3);
+	nbytes = MSG_ReadBits(4);
 	for (i = 0; i < nbytes; i++)
 	{
 		((byte*)bits)[i] = MSG_ReadBits(8);

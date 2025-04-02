@@ -93,12 +93,12 @@ bool BEnabledHDAddon(void)
 
 bool BEnableAddonsFolder(void)
 {
-	if (COM_CheckParm("-addons"))
+	if (COM_CheckParm("-noaddons"))
 	{
 		return false;
 	}
 
-	return (registry->ReadInt("addons_folder", 0) > 0);
+	return (registry->ReadInt("addons", 1) > 0);
 }
 
 void Host_SetHDModels_f(void)

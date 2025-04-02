@@ -475,6 +475,8 @@ mstudioanim_t *R_GetAnim(model_t *psubmodel, mstudioseqdesc_t *pseqdesc)
 {
 	mstudioseqgroup_t *pseqgroup;
 	cache_user_t *paSequences;
+	char filename[MAX_QPATH];
+	char path[MAX_OSPATH];
 
 	pseqgroup = (mstudioseqgroup_t *)((char *)pstudiohdr + pstudiohdr->seqgroupindex);
 	pseqgroup += pseqdesc->seqgroup;
@@ -490,8 +492,17 @@ mstudioanim_t *R_GetAnim(model_t *psubmodel, mstudioseqdesc_t *pseqdesc)
 
 	if (!Cache_Check(&paSequences[pseqdesc->seqgroup]))
 	{
-		Con_DPrintf("loading %s\n", pseqgroup->name);
-		COM_LoadCacheFile(pseqgroup->name, &paSequences[pseqdesc->seqgroup]);
+		Q_memset(filename, 0, sizeof(filename));
+		Q_memset(path, 0, sizeof(path));
+
+		Q_strncpy(filename, psubmodel->name, ARRAYSIZE(filename) - 1);
+		filename[ARRAYSIZE(filename) - 1] = '\0';
+		COM_StripExtension(filename, filename);
+		Q_snprintf(path, ARRAYSIZE(path), "%s%02d.mdl", filename, pseqdesc->seqgroup);
+		path[ARRAYSIZE(path) - 1] = '\0';
+
+		Con_DPrintf("loading %s\n", path);
+		COM_LoadCacheFile(path, &paSequences[pseqdesc->seqgroup]);
 	}
 
 	return (mstudioanim_t *)((char *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);

@@ -83,7 +83,7 @@ enum
 	MSG_FL_ONE			= BIT(7),	// Send to single client
 };
 
-const int RESOURCE_INDEX_BITS = 12;
+const int RESOURCE_INDEX_BITS = 16;
 
 #ifdef REHLDS_FIXES
 const int RESOURCE_MAX_COUNT = BIT(RESOURCE_INDEX_BITS);
@@ -174,7 +174,7 @@ typedef struct client_frame_s
 	double senttime;
 	float ping_time;
 	clientdata_t clientdata;
-	weapon_data_t weapondata[64];
+	weapon_data_t weapondata[256];
 	packet_entities_t entities;
 } client_frame_t;
 
@@ -533,8 +533,10 @@ void SV_EmitEvents(client_t *cl, packet_entities_t *pack, sizebuf_t *msg);
 void SV_EmitEvents_internal(client_t *cl, packet_entities_t *pack, sizebuf_t *msg);
 void SV_AddToFatPVS(vec_t *org, mnode_t *node);
 unsigned char *SV_FatPVS(float *org);
+unsigned char *SV_AddPositionToFatPVS(float *org);
 void SV_AddToFatPAS(vec_t *org, mnode_t *node);
 unsigned char *SV_FatPAS(float *org);
+unsigned char *SV_AddPositionToFatPAS(float *org);
 int SV_PointLeafnum(vec_t *p);
 void TRACE_DELTA(char *fmt, ...);
 void SV_SetCallback(int num, qboolean remove, qboolean custom, int *numbase, qboolean full, int offset);
@@ -576,7 +578,7 @@ NOXREF void SV_ReconnectAllClients(void);
 void SetCStrikeFlags(void);
 void SV_ActivateServer(int runPhysics);
 void SV_ActivateServer_internal(int runPhysics);
-void SV_ServerShutdown(void);
+void SV_ServerShutdown(const char* _MapName);
 int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot);
 void SV_LoadEntities(void);
 void SV_ClearEntities(void);
@@ -623,3 +625,8 @@ char *SV_GetClientIDString(client_t *client);
 int GetGameAppID(void);
 qboolean IsGameSubscribed(const char *gameName);
 NOXREF qboolean BIsValveGame(void);
+
+// serverdll.cpp
+void SV_EndFrame( void );
+void SV_NotifyClients( const char* _Text );
+void SV_OnLevelChange(const char* _MapName);

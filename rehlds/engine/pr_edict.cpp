@@ -275,6 +275,7 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 
 				Q_strcpy(keyname, "angles");
 			}
+#ifndef REHLDS_SVEN
 #ifdef REHLDS_FIXES
 			else if (!Q_strcmp(keyname, "model"))
 			{
@@ -306,11 +307,12 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 
 #ifdef REHLDS_OPT_PEDANTIC
 						g_rehlds_sv.modelsMap.put(g_psv.model_precache[i], i);
-#endif
+#endif // REHLDS_OPT_PEDANTIC
 					}
 				}
 			}
-#endif
+#endif // REHLDS_FIXES
+#endif // !REHLDS_SVEN
 
 			kvd.szClassName = className;
 			kvd.szKeyName = keyname;

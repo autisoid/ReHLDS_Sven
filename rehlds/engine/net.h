@@ -120,7 +120,7 @@ const int MAX_UDP_PACKET	= 4010; // 9 bytes SPLITHEADER + 4000 payload?
 const int MAX_MSGLEN		= 3990; // 10 reserved for fragheader?
 
 // Max length of unreliable message
-const int MAX_DATAGRAM		= 4000;
+const int MAX_DATAGRAM = 65000; //4000;
 
 // This is the packet payload without any header bytes (which are attached for actual sending)
 const int NET_MAX_PAYLOAD	= 65536;

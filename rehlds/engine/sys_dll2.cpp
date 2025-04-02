@@ -28,6 +28,8 @@
 
 #include "precompiled.h"
 
+#include "iserverdll.h"
+
 IDedicatedExports *dedicated_;
 qboolean g_bIsWin95;
 qboolean g_bIsWin98;
@@ -36,6 +38,8 @@ double g_flLastSteamProgressUpdateTime;
 char *szCommonPreloads = "multiplayer_preloads";
 char *szReslistsBaseDir = "reslists";
 char *szReslistsExt = ".lst";
+
+CSysModule* g_pServerModule;
 
 const char *GetCurrentSteamAppName(void)
 {
@@ -317,53 +321,155 @@ NOXREF void Sys_ShutdownArgv(void)
 	NOXREFCHECK;
 }
 
-void Sys_InitMemory(void)
+void Sys_InitMemory()
 {
-	int i;
+	host_parms.membase = NULL;
+	host_parms.memsize = 0;
 
-	i = COM_CheckParm("-heapsize");
-	if (i && i < com_argc - 1)
-		host_parms.memsize = Q_atoi(com_argv[i + 1]) * 1024;
-
-	if (host_parms.memsize < MINIMUM_WIN_MEMORY)
+	// Minimum memory profile
+	if (COM_CheckParm("-minmemory"))
 	{
-#ifdef _WIN32
-		MEMORYSTATUS lpBuffer;
-		lpBuffer.dwLength = sizeof(MEMORYSTATUS);
-		GlobalMemoryStatus(&lpBuffer);
-
-		if (lpBuffer.dwTotalPhys)
+		host_parms.memsize = MINIMUM_WIN_MEMORY;
+	}
+	// Maximum memory profile
+	else if (COM_CheckParm("-maxmemory"))
+	{
+		host_parms.memsize = MAXIMUM_WIN_MEMORY;
+	}
+	else
+	{
+		// Allow overrides for heapsize
+		int heapsizeIndex = COM_CheckParm("-heapsize");
+		if (heapsizeIndex > 0 && heapsizeIndex < com_argc - 1)
 		{
-			if (lpBuffer.dwTotalPhys < FIFTEEN_MB)
-				Sys_Error("%s: Available memory less than 15MB!!! %i", __func__, host_parms.memsize);
+			char heapValue[64];
+			Q_strlcpy(heapValue, com_argv[heapsizeIndex + 1]);
 
-			host_parms.memsize = (int)(lpBuffer.dwTotalPhys >> 1);
-			if (host_parms.memsize < MINIMUM_WIN_MEMORY)
-				host_parms.memsize = MINIMUM_WIN_MEMORY;
+			if (strlen(heapValue) != 0)
+			{
+				// -heapsize 1G
+				// -heapsize 512M
+				char unit = heapValue[strlen(heapValue) - 1];
+				if (isalpha(unit))
+				{
+					heapValue[strlen(heapValue) - 1] = '\0'; // remove M/G unit if it's an alphabetical letter
+
+					float heapMemoryBytes = Q_atof(heapValue) * 1024.0f; // By default, measured in KB
+
+					if (unit == 'm' || unit == 'M')
+					{
+						heapMemoryBytes = 1024.0f * heapMemoryBytes; // allocate heapsize in Megabytes
+					}
+					else if (unit == 'g' || unit == 'G')
+					{
+						heapMemoryBytes = 1024.0f * 1024.0f * heapMemoryBytes; // allocate heapsize in Gigabytes
+					}
+
+					host_parms.memsize = (int)heapMemoryBytes;
+					}
+				else
+				{
+					host_parms.memsize = Q_atoi(com_argv[heapsizeIndex + 1]) * 1024;
+				}
+			}
+			else
+			{
+				host_parms.memsize = DEFAULT_MEMORY; // 256MB by default
+			}
 		}
-		else
-			host_parms.memsize = MAXIMUM_WIN_MEMORY;
-
-		if (g_bIsDedicatedServer)
-			host_parms.memsize = DEFAULT_MEMORY;
-#else
-		host_parms.memsize = DEFAULT_MEMORY;
-#endif // _WIN32
 	}
 
-	if (host_parms.memsize > MAXIMUM_DEDICATED_MEMORY)
-		host_parms.memsize = MAXIMUM_DEDICATED_MEMORY;
+	bool bDidDefault = false;
 
-	if (COM_CheckParm("-minmemory"))
-		host_parms.memsize = MINIMUM_WIN_MEMORY;
-#ifdef _WIN32
-	host_parms.membase = (void *)GlobalAlloc(GMEM_FIXED, host_parms.memsize);
+	// Check and adjust memory size if it exceeds limit or didn't set up
+	if (host_parms.memsize == 0 || host_parms.memsize > MAXIMUM_WIN_MEMORY)
+	{
+#if defined(_WIN32)
+		MEMORYSTATUS lpBuffer{};
+
+		// Get OS Memory status
+		lpBuffer.dwLength = sizeof(MEMORYSTATUS);
+		GlobalMemoryStatus(&lpBuffer);
+		bDidDefault = true;
+
+		// Check available virtual memory against minimum memory requirement
+		if (lpBuffer.dwAvailVirtual < MINIMUM_WIN_MEMORY)
+		{
+			Sys_Error(
+				"Available memory less than the %.2f MB requirement (%.2f MB).\n"
+				"Check your hardware against the system requirements.\n",
+				(float)MINIMUM_WIN_MEMORY,
+				(float)host_parms.memsize / 1024.0f / 1024.0f);
+		}
+
+		// take half the virtual memory
+		host_parms.memsize = lpBuffer.dwAvailVirtual >> 1;
 #else
-	host_parms.membase = Mem_Malloc(host_parms.memsize);
-#endif // _WIN32
+		uint32_t unVmallocChunk = 0;
+		FILE* fh = fopen("/proc/meminfo", "r");
+		if (fh)
+		{
+			char buf[512]{ 0 };
+			while (!feof(fh) && fgets(buf, sizeof(buf), fh))
+			{
+				if (sscanf(buf, "VmallocChunk: %d kB", &unVmallocChunk) == 1 && unVmallocChunk > 0)
+					break;
+			}
 
-	if (!host_parms.membase)
-		Sys_Error("%s: Unable to allocate %.2f MB\n", __func__, (float)host_parms.memsize / (1024.0f * 1024.0f));
+			fclose(fh);
+		}
+
+		host_parms.memsize = unVmallocChunk;
+#endif
+	}
+
+	// Ensure memory size is within acceptable range
+	if (host_parms.memsize == 0)
+		host_parms.memsize = DEFAULT_MEMORY;
+
+	// At least 64 MB, even if we have to swap a lot
+	if (host_parms.memsize < MINIMUM_WIN_MEMORY)
+		host_parms.memsize = MINIMUM_WIN_MEMORY;
+
+	// No more than 512 MB
+	if (host_parms.memsize > MAXIMUM_WIN_MEMORY)
+		host_parms.memsize = MAXIMUM_WIN_MEMORY;
+
+	int initialMemsize = host_parms.memsize;
+	while (!host_parms.membase)
+	{
+#if defined(_WIN32)
+		host_parms.membase = GlobalAlloc(GMEM_FIXED, host_parms.memsize);
+#else
+		host_parms.membase = Mem_Malloc(host_parms.memsize);
+#endif
+		if (!host_parms.membase)
+			host_parms.memsize -= 1024 * 1024; // reduce by 1 MB per step until allocation memory will be succeed
+
+		if (host_parms.memsize < MINIMUM_WIN_MEMORY)
+		{
+			float initialHeapMB = (float)initialMemsize / 1024.0f / 1024.0f;
+			float minimumHeapMB = (float)host_parms.memsize / 1024.0f / 1024.0f;
+
+			Sys_Error(
+				"Unable to allocate %.2f MB of memory. We tried as little as %.2f MB, that failed too.\n"
+				"Check your hardware against the system requirements, or close other applications to free memory.\n",
+				initialHeapMB,
+				minimumHeapMB);
+		}
+	}
+
+	// Show allocated heap space if requested
+	if (COM_CheckParm("-showheap"))
+	{
+		char szDisplayHeap[128]{ 0 };
+		Q_snprintf(szDisplayHeap, sizeof(szDisplayHeap), "Allocated %.2f MB of heap space.\n", (float)host_parms.memsize / 1024.0f / 1024.0f);
+#if defined(_WIN32)
+		MessageBoxA(NULL, szDisplayHeap, "Message", MB_ICONINFORMATION | MB_TOPMOST | MB_OK);
+#else
+		Sys_Printf(szDisplayHeap);
+#endif
+	}
 }
 
 void Sys_ShutdownMemory(void)
@@ -556,6 +662,43 @@ void ClearIOStates(void)
 	Key_ClearStates();
 	ClientDLL_ClearStates();
 #endif // SWDS
+}
+
+bool Sys_LoadServerDLL(const char* modulename)
+{
+	CSysModule* pModule;
+	CreateInterfaceFn pfnFactory;
+	
+	g_pServerModule = pModule = Sys_LoadModule(modulename);
+
+	if (!pModule)
+		return false;
+
+	pfnFactory = Sys_GetFactory(pModule);
+
+	if (!pfnFactory)
+		return false;
+
+	g_pServerDLL = (IServerDLL*)pfnFactory(SERVERDLL_INTERFACE_VERSION, NULL);
+
+	return g_pServerDLL != NULL;
+}
+
+void Sys_InitServerDLL(void)
+{
+	if (g_pServerDLL)
+	{
+		g_pServerDLL->Init(Sys_GetFactoryThis());
+	}
+}
+
+void Sys_UnloadServerDLL(void)
+{
+	if (g_pServerModule)
+	{
+		Sys_UnloadModule(g_pServerModule);
+		g_pServerModule = NULL;
+	}
 }
 
 class CEngineAPI: public IEngineAPI

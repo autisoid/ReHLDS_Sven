@@ -761,9 +761,9 @@ qboolean NET_GetLong(unsigned char *pData, int size, int *outSize)
 	SPLITPACKET *pHeader = (SPLITPACKET *) pData;
 
 	int sequenceNumber = pHeader->sequenceNumber;
-	unsigned char packetID = pHeader->packetID;
+	unsigned short packetID = pHeader->packetID;
 	unsigned int packetCount = packetID & 0xF;
-	unsigned int packetNumber = (unsigned int)packetID >> 4;
+	unsigned int packetNumber = (unsigned int)packetID >> 8;
 
 	if (packetNumber >= NET_WS_MAX_FRAGMENTS || packetCount > NET_WS_MAX_FRAGMENTS)
 	{
@@ -1327,7 +1327,7 @@ int NET_SendLong(netsrc_t sock, SOCKET s, const char *buf, int len, int flags, c
 		{
 			int size = Q_min(int(SPLIT_SIZE), len);
 
-			pPacket->packetID = (packetNumber << 4) + packetCount;
+			pPacket->packetID = (packetNumber << 8) + packetCount;
 
 			Q_memcpy(packet + sizeof(SPLITPACKET), buf + (packetNumber * SPLIT_SIZE), size);
 

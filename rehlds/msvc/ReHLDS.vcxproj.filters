@@ -344,6 +344,12 @@
     <ClCompile Include="..\rehlds\rehlds_messagemngr_impl.cpp">
       <Filter>rehlds</Filter>
     </ClCompile>
+    <ClCompile Include="..\engine\engineserver.cpp">
+      <Filter>engine\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\serverdll.cpp">
+      <Filter>engine\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\version\version.h">
@@ -1068,6 +1074,15 @@
     </ClInclude>
     <ClInclude Include="..\public\rehlds\IMessageManager.h">
       <Filter>public\rehlds</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\iengineserver.h">
+      <Filter>engine\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\engineserver.h">
+      <Filter>engine\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\iserverdll.h">
+      <Filter>engine\server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

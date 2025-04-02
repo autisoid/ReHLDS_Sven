@@ -36,6 +36,6 @@
 typedef struct packet_entities_s
 {
 	int num_entities;
-	unsigned char flags[32];
+	unsigned char flags[MAX_PACKET_ENTITIES / 8];
 	entity_state_t *entities;
 } packet_entities_t;

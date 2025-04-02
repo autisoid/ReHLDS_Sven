@@ -20,7 +20,7 @@
 #endif
 
 #include "archtypes.h"     // DAL
-#define	MAX_PHYSENTS 600 		  // Must have room for all entities in the world.
+#define	MAX_PHYSENTS 1024 		  // Must have room for all entities in the world.
 #define MAX_MOVEENTS 64
 #define	MAX_CLIP_PLANES	5
 

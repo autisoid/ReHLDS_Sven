@@ -574,7 +574,7 @@ void Host_ShutdownServer(qboolean crash)
 	if (!g_psv.active)
 		return;
 
-	SV_ServerShutdown();
+	SV_ServerShutdown(NULL);
 	g_psv.active = FALSE;
 	NET_ClearLagData(TRUE, TRUE);
 
@@ -1233,7 +1233,7 @@ void Host_Shutdown(void)
 #ifdef REHLDS_FIXES
 	Host_ShutdownServer(FALSE);
 #else
-	SV_ServerShutdown();
+	SV_ServerShutdown(NULL);
 #endif
 
 	Voice_Deinit();

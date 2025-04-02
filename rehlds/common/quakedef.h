@@ -33,7 +33,7 @@ typedef int BOOL;
 #define MAX_USERMESSAGES 256
 
 // user message
-#define MAX_USER_MSG_DATA 192
+#define MAX_USER_MSG_DATA 512
 
 //moved to com_model.h
 //typedef struct cache_user_s

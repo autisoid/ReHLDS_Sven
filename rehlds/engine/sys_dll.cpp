@@ -98,6 +98,8 @@ int g_FPUCW_Mask_Prec_64Bit_2 = 0;
 int g_FPUCW_Mask_Round_Trunc = 0;
 int g_FPUCW_Mask_Round_Up = 0;
 
+BOOL g_fSvengineExtensions = FALSE;
+
 FileFindHandle_t g_hfind = FILESYSTEM_INVALID_FIND_HANDLE;
 
 enginefuncs_t g_engfuncsExportedToDlls = {
@@ -861,15 +863,19 @@ void DLL_SetModKey(modinfo_t *pinfo, char *pkey, char *pvalue)
 
 }
 
-void LoadEntityDLLs(const char *szBaseDir)
+//sys_dll2.cpp
+extern bool Sys_LoadServerDLL(const char* modulename);
+extern void Sys_InitServerDLL(void);
+
+void LoadEntityDLLs(const char* szBaseDir)
 {
 	FileHandle_t hLibListFile;
 	unsigned int nFileSize;
 	unsigned int nFileSize2;
-	char *pszInputStream;
+	char* pszInputStream;
 	int nBytesRead;
-	char *pStreamPos;
-	const char *findfn;
+	char* pStreamPos;
+	const char* findfn;
 	NEW_DLL_FUNCTIONS_FN pNewAPI;
 	APIFUNCTION2 pfnGetAPI2;
 	APIFUNCTION pfnGetAPI;
@@ -898,7 +904,7 @@ void LoadEntityDLLs(const char *szBaseDir)
 		if (!nFileSize || (signed int)nFileSize > 262144)
 			Sys_Error("%s: Game listing file size is bogus [%s: size %i]", __func__, "liblist.gam", nFileSize);
 
-		pszInputStream = (char *)Mem_Malloc(nFileSize + 1);
+		pszInputStream = (char*)Mem_Malloc(nFileSize + 1);
 		if (!pszInputStream)
 			Sys_Error("%s: Could not allocate space for game listing file of %i bytes", __func__, nFileSize2 + 1);
 
@@ -937,7 +943,7 @@ void LoadEntityDLLs(const char *szBaseDir)
 					szValue[sizeof(szValue) - 1] = 0;
 				}
 #ifdef REHLDS_FIXES
-				char *value_extension = Q_strrchr(szValue, '.');
+				char* value_extension = Q_strrchr(szValue, '.');
 #ifdef _WIN32
 				if (value_extension && Q_strcmp(value_extension, ".dll") == 0)
 #else // _WIN32
@@ -1024,6 +1030,11 @@ void LoadEntityDLLs(const char *szBaseDir)
 			Con_Printf("==================\n");
 			Host_Error("\n");
 		}
+	}
+
+	if (Sys_LoadServerDLL(szDllFilename)) {
+		g_fSvengineExtensions = TRUE;
+		Sys_InitServerDLL();
 	}
 
 	Con_DPrintf("Dll loaded for %s %s\n", gmodinfo.bIsMod ? "mod" : "game", gEntityInterface.pfnGetGameDescription());

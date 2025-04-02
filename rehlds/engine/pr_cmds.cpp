@@ -897,6 +897,7 @@ edict_t* EXT_FUNC CreateNamedEntity(int className)
 {
 	edict_t *pedict;
 	ENTITYINIT pEntityInit;
+	KeyValueData kvd;
 
 	if (!className)
 		Sys_Error("%s: Spawned a NULL entity!", __func__);
@@ -911,10 +912,33 @@ edict_t* EXT_FUNC CreateNamedEntity(int className)
 	}
 	else
 	{
-		ED_Free(pedict);
-		Con_DPrintf("Can't create entity: %s\n", &pr_strings[className]);
-		return NULL;
+		pEntityInit = GetEntityInit("custom");
+
+		if (!pEntityInit)
+			goto error;
+
+		pEntityInit(&pedict->v);
+
+		if (pedict->v.flags & FL_KILLME)
+			goto error;
+
+		kvd.szClassName = "custom";
+		kvd.szKeyName = "customclass";
+		kvd.szValue = &pr_strings[className];
+		kvd.fHandled = FALSE;
+
+		gEntityInterface.pfnKeyValue(pedict, &kvd);
+
+		if (pedict->v.flags & FL_KILLME)
+			goto error;
+
+		return pedict;
 	}
+
+error:
+	ED_Free(pedict);
+	Con_DPrintf("Can't create entity: %s\n", &pr_strings[className]);
+	return NULL;
 }
 
 void EXT_FUNC PF_Remove_I(edict_t *ed)
@@ -1583,6 +1607,19 @@ int EXT_FUNC PF_NumberOfEntities_I(void)
 	return ent_count;
 }
 
+int EXT_FUNC PF_NumberOfPrecachedModels(void)
+{
+	model_t**	pModel;
+	int			i;
+
+	for (i = 0, pModel = g_psv.models; i < MAX_MODELS; i++, pModel++) {
+		if (!pModel || (!*pModel))
+			break;
+	}
+
+	return i;
+}
+
 char* EXT_FUNC PF_GetInfoKeyBuffer_I(edict_t *e)
 {
 	int e1;
@@ -2183,6 +2220,10 @@ void EXT_FUNC PF_MessageEnd_I(void)
 			return;
 		}
 
+		if (strstr(pUserMsg->szName, "Ammo") || strstr(pUserMsg->szName, "Weap")) {
+			Con_Printf("%s: Sending %s user message\n", __func__, pUserMsg->szName);
+		}
+
 		if (pUserMsg->iSize == -1)
 		{
 			MsgIsVarLength = 1;
@@ -2223,7 +2264,7 @@ void EXT_FUNC PF_MessageEnd_I(void)
 
 		MSG_WriteByte(pBuffer, gMsgType);
 		if (MsgIsVarLength)
-			MSG_WriteByte(pBuffer, gMsgBuffer.cursize);
+			MSG_WriteShort(pBuffer, gMsgBuffer.cursize);
 		MSG_WriteBuf(pBuffer, gMsgBuffer.cursize, gMsgBuffer.data);
 	}
 #ifdef REHLDS_FIXES
@@ -2311,7 +2352,7 @@ void EXT_FUNC PF_WriteCoord_I(float flValue)
 {
 	if (!gMsgStarted)
 		Sys_Error("%s: called with no active message\n", __func__);
-	MSG_WriteShort(&gMsgBuffer, (int)(flValue * 8.0));
+	MSG_WriteLong(&gMsgBuffer, (int)(flValue * 8.0));
 }
 
 void EXT_FUNC PF_WriteString_I(const char *sz)

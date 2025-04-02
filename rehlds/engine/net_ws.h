@@ -106,7 +106,7 @@ typedef struct SPLITPACKET_t
 {
 	int netID;
 	int sequenceNumber;
-	unsigned char packetID;
+	unsigned short packetID;
 } SPLITPACKET;
 #pragma pack(pop)
 

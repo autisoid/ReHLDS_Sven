@@ -134,6 +134,7 @@ int PF_precache_generic_I(const char *s);
 int PF_precache_generic_I_internal(const char *s);
 int PF_IsMapValid_I(const char *mapname);
 int PF_NumberOfEntities_I(void);
+int PF_NumberOfPrecachedModels(void);
 char *PF_GetInfoKeyBuffer_I(edict_t *e);
 char *PF_InfoKeyValue_I(char *infobuffer, const char *key);
 void PF_SetKeyValue_I(char *infobuffer, const char *key, const char *value);

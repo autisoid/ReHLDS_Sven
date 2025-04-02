@@ -1181,7 +1181,7 @@ void SV_ClipToLinks(areanode_t *node, moveclip_t *clip)
 			Sys_Error("%s: Trigger in clipping list", __func__);
 
 #ifndef REHLDS_OPT_PEDANTIC
-		if (gNewDLLFunctions.pfnShouldCollide && !gNewDLLFunctions.pfnShouldCollide(touch, clip->passedict))
+		if (!clip->passedict || (gNewDLLFunctions.pfnShouldCollide && !gNewDLLFunctions.pfnShouldCollide(touch, clip->passedict)))
 #ifdef REHLDS_FIXES
 			// https://github.com/dreamstalker/rehlds/issues/46
 			continue;
@@ -1236,7 +1236,7 @@ void SV_ClipToLinks(areanode_t *node, moveclip_t *clip)
 		}
 
 #ifdef REHLDS_OPT_PEDANTIC
-		if (gNewDLLFunctions.pfnShouldCollide && !gNewDLLFunctions.pfnShouldCollide(touch, clip->passedict))
+		if (!clip->passedict || (gNewDLLFunctions.pfnShouldCollide && !gNewDLLFunctions.pfnShouldCollide(touch, clip->passedict)))
 #ifdef REHLDS_FIXES
 			// https://github.com/dreamstalker/rehlds/issues/46
 			continue;

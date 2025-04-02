@@ -53,7 +53,7 @@
 #define MIPLEVELS			4
 #define NUM_AMBIENTS		4		// automatic ambient sounds
 #define MAXLIGHTMAPS		4
-#define MAX_KNOWN_MODELS	1024
+#define MAX_KNOWN_MODELS	16384
 
 typedef struct mvertex_s
 {
@@ -146,7 +146,9 @@ struct msurface_s
 
 	// Maximum s/t texture size on the surface
 #if defined(GLQUAKE) || defined(SWDS)
-	#define MAX_SURFACE_TEXTURE_SIZE 512
+	//1024 in Sven
+	#define MAX_SURFACE_TEXTURE_SIZE 1024
+	//#define MAX_SURFACE_TEXTURE_SIZE 512
 #else
 	#define MAX_SURFACE_TEXTURE_SIZE 256 // Software rendering is limited to 256
 #endif

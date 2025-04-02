@@ -22,8 +22,9 @@
 // Max # of clients allowed in a server.
 #define MAX_CLIENTS				32
 
+//Sven Co-op has 8192 max edicts, so we have 13 bits for that.
 // How many bits to use to encode an edict.
-#define MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
+#define MAX_EDICT_BITS				13			// # of bits needed to represent max edicts
 // Max # of edicts in a level (2048)
 #define MAX_EDICTS					(1<<MAX_EDICT_BITS)
 

@@ -1100,7 +1100,7 @@ void Host_Changelevel_f(void)
 	SCR_BeginLoadingPlaque(FALSE);
 	S_StopAllSounds(1);
 	SV_InactivateClients();
-	SV_ServerShutdown();
+	SV_ServerShutdown(_level);
 	SV_SpawnServer(FALSE, _level, startspot);
 	SV_LoadEntities();
 	SV_ActivateServer(1);
@@ -1156,7 +1156,7 @@ void Host_Restart_f(void)
 	Q_strncpy(name, g_psv.name, sizeof(name) - 1);
 	name[sizeof(name) - 1] = 0;
 
-	SV_ServerShutdown();
+	SV_ServerShutdown(name);
 	SV_SpawnServer(FALSE, name, NULL);
 	SV_LoadEntities();
 	SV_ActivateServer(1);
@@ -1171,7 +1171,7 @@ void Host_Reload_f(void)
 
 	Host_ClearGameState();
 	SV_InactivateClients();
-	SV_ServerShutdown();
+	SV_ServerShutdown(gHostMap.string);
 
 	pSaveName = Host_FindRecentSave(name);
 	if (!pSaveName || !Host_Load(pSaveName))
@@ -2437,7 +2437,7 @@ void Host_Changelevel2_f(void)
 	oldlevel[sizeof(oldlevel) - 1] = 0;
 
 	pSaveData = SaveGamestate();
-	SV_ServerShutdown();
+	SV_ServerShutdown(level);
 	FS_LogLevelLoadStarted(level);
 
 	if (!SV_SpawnServer(FALSE, level, startspot))

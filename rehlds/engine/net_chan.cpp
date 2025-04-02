@@ -492,8 +492,8 @@ void Netchan_Transmit(netchan_t *chan, int length, byte *data)
 			{
 				MSG_WriteByte(&sb_send, 1);
 				MSG_WriteLong(&sb_send, chan->reliable_fragid[i]);
-				MSG_WriteShort(&sb_send, chan->frag_startpos[i]);
-				MSG_WriteShort(&sb_send, chan->frag_length[i]);
+				MSG_WriteLong(&sb_send, chan->frag_startpos[i]);
+				MSG_WriteLong(&sb_send, chan->frag_length[i]);
 			}
 			else
 			{
@@ -539,7 +539,7 @@ void Netchan_Transmit(netchan_t *chan, int length, byte *data)
 
 	if (!g_pcls.demoplayback)
 	{
-		COM_Munge2(sb_send.data + 8, sb_send.cursize - 8, (unsigned char)(chan->outgoing_sequence - 1));
+		//COM_Munge2(sb_send.data + 8, sb_send.cursize - 8, (unsigned char)(chan->outgoing_sequence - 1));
 
 		if (g_modfuncs.m_pfnProcessOutgoingNet)
 			g_modfuncs.m_pfnProcessOutgoingNet(chan, &sb_send);
@@ -638,6 +638,11 @@ void Netchan_CheckForCompletion(netchan_t *chan, int stream, int intotalbuffers)
 	}
 }
 
+// Pad a number so it lies on an N byte boundary.
+// So PAD_NUMBER(0,4) is 0 and PAD_NUMBER(1,4) is 4
+#define PAD_NUMBER( num, boundary )	((( num ) + (( boundary ) - 1 )) / ( boundary )) * ( boundary )
+#define BIT_BYTE( bits ) PAD_NUMBER( ( bits ), 8 ) >> 3
+
 qboolean Netchan_Validate(netchan_t *chan, qboolean *frag_message, unsigned int *fragid, int *frag_offset, int *frag_length)
 {
 	for (int i = 0; i < MAX_STREAMS; i++)
@@ -663,8 +668,18 @@ qboolean Netchan_Validate(netchan_t *chan, qboolean *frag_message, unsigned int 
 			return FALSE;
 		if (FRAG_GETID(fragid[i]) > FRAG_GETCOUNT(fragid[i]))
 			return FALSE;
+
 		if (!frag_length[i])
 			return FALSE;
+
+		// convert bit offsets to bytes
+		int offset = BIT_BYTE(frag_offset[i]);
+		int length = BIT_BYTE(frag_length[i]);
+		if (length < 0 || length > (FRAGMENT_MAX_SIZE << 3))
+			return FALSE;
+		if (offset < 0 || offset > (FRAGMENT_MAX_SIZE << 3))
+			return FALSE;
+
 		if ((size_t)frag_length[i] > FRAGMENT_MAX_SIZE || (size_t)frag_offset[i] > NET_MAX_PAYLOAD - 1)
 			return FALSE;
 
@@ -727,7 +742,7 @@ qboolean Netchan_Process(netchan_t *chan)
 	reliable_ack = sequence_ack >> 31;
 	message_contains_fragments = sequence & (1 << 30) ? true : false;
 
-	COM_UnMunge2(&net_message.data[8], net_message.cursize - 8, sequence & 0xFF);
+	//COM_UnMunge2(&net_message.data[8], net_message.cursize - 8, sequence & 0xFF);
 	if (message_contains_fragments)
 	{
 		for (i = 0; i < MAX_STREAMS; i++)
@@ -736,8 +751,8 @@ qboolean Netchan_Process(netchan_t *chan)
 			{
 				frag_message[i] = true;
 				fragid[i] = MSG_ReadLong();
-				frag_offset[i] = MSG_ReadShort();
-				frag_length[i] = MSG_ReadShort();
+				frag_offset[i] = MSG_ReadLong();
+				frag_length[i] = MSG_ReadLong();
 			}
 		}
 
