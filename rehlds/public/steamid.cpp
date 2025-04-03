@@ -1,6 +1,6 @@
 #include "precompiled.h"
 
-bool CSteamID::SetFromSteam2String(const char *pchSteam2ID, EUniverse eUniverse)
+bool SteamIDFromSteam2String(const char* pchSteam2ID, EUniverse eUniverse, CSteamID* pSteamIDOut)
 {
 	Assert(pchSteam2ID);
 
@@ -10,10 +10,10 @@ bool CSteamID::SetFromSteam2String(const char *pchSteam2ID, EUniverse eUniverse)
 	steam2ID.m_SteamLocalUserID.Split.High32bits = 0;
 	steam2ID.m_SteamLocalUserID.Split.Low32bits = 0;
 
-	const char *pchTSteam2ID = pchSteam2ID;
+	const char* pchTSteam2ID = pchSteam2ID;
 
 	// Customer support is fond of entering steam IDs in the following form:  STEAM_n:x:y
-	char *pchOptionalLeadString = "STEAM_";
+	char* pchOptionalLeadString = "STEAM_";
 	if (Q_strnicmp(pchSteam2ID, pchOptionalLeadString, Q_strlen(pchOptionalLeadString)) == 0)
 		pchTSteam2ID = pchSteam2ID + Q_strlen(pchOptionalLeadString);
 
@@ -27,6 +27,6 @@ bool CSteamID::SetFromSteam2String(const char *pchSteam2ID, EUniverse eUniverse)
 		return false;
 
 	// Now convert to steam ID from the Steam2 ID structure
-	SetFromSteam2(&steam2ID, eUniverse);
+	*pSteamIDOut = SteamIDFromSteam2UserID(&steam2ID, eUniverse);
 	return true;
 }

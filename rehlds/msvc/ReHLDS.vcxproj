@@ -142,6 +142,7 @@
     </ClCompile>
     <ClCompile Include="..\rehlds\RehldsRuntimeConfig.cpp" />
     <ClCompile Include="..\rehlds\rehlds_security.cpp" />
+    <ClCompile Include="..\rehlds\steam_adapter\gameserver011.cpp" />
     <ClCompile Include="..\rehlds\structSizeCheck.cpp" />
     <ClCompile Include="..\testsuite\anonymizer.cpp" />
     <ClCompile Include="..\testsuite\funccalls.cpp" />
@@ -417,6 +418,7 @@
     <ClInclude Include="..\public\steam\isteamcontroller.h" />
     <ClInclude Include="..\public\steam\isteamfriends.h" />
     <ClInclude Include="..\public\steam\isteamgameserver.h" />
+    <ClInclude Include="..\public\steam\isteamgameserver011.h" />
     <ClInclude Include="..\public\steam\isteamgameserverstats.h" />
     <ClInclude Include="..\public\steam\isteamhttp.h" />
     <ClInclude Include="..\public\steam\isteammatchmaking.h" />
@@ -453,6 +455,7 @@
     <ClInclude Include="..\rehlds\rehlds_api_impl.h" />
     <ClInclude Include="..\rehlds\rehlds_interfaces_impl.h" />
     <ClInclude Include="..\rehlds\rehlds_security.h" />
+    <ClInclude Include="..\rehlds\steam_adapter\gameserver011.h" />
     <ClInclude Include="..\testsuite\anonymizer.h" />
     <ClInclude Include="..\testsuite\funccalls.h" />
     <ClInclude Include="..\testsuite\memory.h" />

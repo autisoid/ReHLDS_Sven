@@ -152,6 +152,7 @@ set(ENGINE_SRCS
 	engine/delta.cpp
 	engine/delta_jit.cpp
 	engine/ed_strpool.cpp
+	engine/engineserver.cpp
 	engine/filesystem.cpp
 	engine/filesystem_internal.cpp
 	engine/hashpak.cpp
@@ -171,6 +172,7 @@ set(ENGINE_SRCS
 	engine/r_studio.cpp
 	engine/vid_null.cpp
 	engine/cl_null.cpp
+	engine/serverdll.cpp
 	engine/snd_null.cpp
 	engine/sse_mathfun.cpp
 	engine/public_amalgamation.cpp
@@ -184,6 +186,7 @@ set(ENGINE_SRCS
 	rehlds/rehlds_interfaces_impl.cpp
 	rehlds/rehlds_messagemngr_impl.cpp
 	rehlds/rehlds_security.cpp
+	rehlds/steam_adapter/gameserver011.cpp
 )
 
 set(UNITTESTS_SRCS

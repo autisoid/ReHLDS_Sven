@@ -8563,7 +8563,7 @@ typedef struct GameToAppIDMapItem_s
 	const char *pGameDir;
 } GameToAppIDMapItem_t;
 
-GameToAppIDMapItem_t g_GameToAppIDMap[11] = {
+GameToAppIDMapItem_t g_GameToAppIDMap[12] = {
 	{ 0x0A, "cstrike" },
 	{ 0x14, "tfc" },
 	{ 0x1E, "dod" },
@@ -8575,6 +8575,7 @@ GameToAppIDMapItem_t g_GameToAppIDMap[11] = {
 	{ 0x64, "czeror" },
 	{ 0x82, "bshift" },
 	{ 0x96, "cstrike_beta" },
+	{ 0x37230, "svencoop" },
 };
 
 int GetGameAppID(void)
@@ -8582,7 +8583,7 @@ int GetGameAppID(void)
 	char arg[260];
 	char gd[260];
 
-	COM_ParseDirectoryFromCmd("-game", gd, "valve");
+	COM_ParseDirectoryFromCmd("-game", gd, "svencoop" /* "valve" - let the default be "svencoop" */);
 	COM_FileBase(gd, arg);
 	for (int i = 0; i < ARRAYSIZE(g_GameToAppIDMap); i++)
 	{
@@ -8590,7 +8591,9 @@ int GetGameAppID(void)
 			return g_GameToAppIDMap[i].iAppID;
 	}
 
-	return 70;
+	// xWhitey: Sven Co-op's GetGameAppID returns 225840 no matter which game directory the engine is running from
+	// but for backwards compatibility I decided to leave the preceding code.
+	return 225840; //70;
 }
 
 qboolean IsGameSubscribed(const char *gameName)

@@ -2220,10 +2220,6 @@ void EXT_FUNC PF_MessageEnd_I(void)
 			return;
 		}
 
-		if (strstr(pUserMsg->szName, "Ammo") || strstr(pUserMsg->szName, "Weap")) {
-			Con_Printf("%s: Sending %s user message\n", __func__, pUserMsg->szName);
-		}
-
 		if (pUserMsg->iSize == -1)
 		{
 			MsgIsVarLength = 1;

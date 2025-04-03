@@ -51,6 +51,9 @@
     <Filter Include="dlls">
       <UniqueIdentifier>{c91850f0-8e81-47e5-9a5f-53215766e960}</UniqueIdentifier>
     </Filter>
+    <Filter Include="rehlds\steam_adapter">
+      <UniqueIdentifier>{4e2d8487-e3d7-44e0-a4e7-1ab2aae5d5d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\engine\common.cpp">
@@ -344,6 +347,9 @@
     <ClCompile Include="..\rehlds\rehlds_messagemngr_impl.cpp">
       <Filter>rehlds</Filter>
     </ClCompile>
+    <ClCompile Include="..\rehlds\steam_adapter\gameserver011.cpp">
+      <Filter>rehlds\steam_adapter</Filter>
+    </ClCompile>
     <ClCompile Include="..\engine\engineserver.cpp">
       <Filter>engine\server</Filter>
     </ClCompile>
@@ -556,9 +562,6 @@
     <ClInclude Include="..\public\interface.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\steam\steamtypes.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
     <ClInclude Include="..\engine\filesystem_.h">
       <Filter>engine\common</Filter>
     </ClInclude>
@@ -595,68 +598,8 @@
     <ClInclude Include="..\engine\sv_steam3.h">
       <Filter>engine\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\steam\isteamapps.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteambilling.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamclient.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamcontroller.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamfriends.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamgameserver.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamgameserverstats.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamhttp.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteammatchmaking.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamnetworking.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamremotestorage.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamscreenshots.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamunifiedmessages.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamuser.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamuserstats.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\isteamutils.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\matchmakingtypes.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\steam_api.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\steam_gameserver.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\steamclientpublic.h">
-      <Filter>public\steam</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\steam\steamhttpenums.h">
-      <Filter>public\steam</Filter>
+    <ClInclude Include="..\rehlds\steam_adapter\gameserver011.h">
+      <Filter>rehlds\steam_adapter</Filter>
     </ClInclude>
     <ClInclude Include="..\common\SteamCommon.h">
       <Filter>common</Filter>
@@ -1083,6 +1026,132 @@
     </ClInclude>
     <ClInclude Include="..\engine\iserverdll.h">
       <Filter>engine\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamapps.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamclient.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamcontroller.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamdualsense.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamfriends.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamgamecoordinator.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamgameserver.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamgameserverstats.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamhtmlsurface.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamhttp.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteaminput.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteaminventory.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteammatchmaking.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteammusic.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteammusicremote.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamnetworking.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamnetworkingmessages.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamnetworkingsockets.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamnetworkingutils.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamparentalsettings.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamremoteplay.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamremotestorage.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamscreenshots.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamtimeline.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamugc.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamuser.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamuserstats.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamutils.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamvideo.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\matchmakingtypes.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steam_api.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steam_api_common.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steam_api_flat.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steam_api_internal.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steam_gameserver.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamclientpublic.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamhttpenums.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamnetworkingfakeip.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamnetworkingtypes.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamtypes.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\steamuniverse.h">
+      <Filter>public\steam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\steam\isteamgameserver011.h">
+      <Filter>public\steam</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
