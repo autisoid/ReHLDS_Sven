@@ -1362,12 +1362,14 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 			else
 				fdata = &host_client->frames[bits].weapondata[i];
 
+#ifndef REHLDS_SVEN // In Sven, this check doesn't exist
 			if (DELTA_CheckDelta((byte *)fdata, (byte *)tdata, g_pweapondelta))
+#endif // !REHLDS_SVEN
 			{
 				MSG_WriteBits(1, 1);
 				MSG_WriteBits(i, 8);
 
-#if defined (REHLDS_OPT_PEDANTIC) || defined (REHLDS_FIXES)
+#if (defined (REHLDS_OPT_PEDANTIC) || defined (REHLDS_FIXES)) && !defined(REHLDS_SVEN)
 				// all calculations are already done
 				_DELTA_WriteDelta((byte *)fdata, (byte *)tdata, TRUE, g_pweapondelta, NULL, TRUE);
 #else
