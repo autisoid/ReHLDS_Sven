@@ -32,7 +32,7 @@
 
 #ifdef REHLDS_JIT
 const int DELTAJIT_MAX_BLOCKS = 32;
-const int DELTAJIT_MAX_FIELDS = 56;
+const int DELTAJIT_MAX_FIELDS = 128;
 
 struct deltajit_field {
 	unsigned int id;
