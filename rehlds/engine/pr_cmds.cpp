@@ -845,6 +845,160 @@ void EXT_FUNC PF_stuffcmd_I(edict_t *pEdict, const char *szFmt, ...)
 
 void EXT_FUNC PF_localcmd_I(const char *str)
 {
+#if defined(REHLDS_FIXES) && defined(REHLDS_SVEN)
+	GameBanDelayedCommand_t* pDelayedCommand, *pNeededCommand;
+	int cNumScanned, nUserID;
+	size_t cbStringSize;
+	char* pszTemp;
+	const char* pszSteamID;
+	const char* pszNeededID;
+	client_t* pSearch;
+	int i;
+
+	pDelayedCommand = pNeededCommand = NULL;
+	pszTemp = NULL;
+	pszSteamID = pszNeededID = NULL;
+	pSearch = NULL;
+	cNumScanned = nUserID = i = 0;
+
+	if (sv_rehlds_sven_block_game_bans.value > 0.f)
+	{
+		// example command: kick "#1"\n
+		if (!Q_strnicmp(str, "kick \"", sizeof("kick \"") - 1)
+			&& Q_strstr(str, "#")) // userid exists in the command
+		{
+			cNumScanned = sscanf(str, "kick \"#%d\"\n", &nUserID);
+			if (!cNumScanned)
+			{
+				Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, but cannot read the player ID!\n", __func__);
+				return;
+			}
+			cbStringSize = Q_strlen(str) + 1;
+
+			if (nUserID > g_psvs.maxclients)
+			{
+				Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, but the player ID is above the limit!\n", __func__);
+				return;
+			}
+
+			pDelayedCommand = (GameBanDelayedCommand_t*)Z_Malloc(sizeof(GameBanDelayedCommand_t));
+			if (!pDelayedCommand)
+			{
+				Con_Printf("%s: failure allocating memory for a GameBanDelayedCommand_t entry\n", __func__);
+				return;
+			}
+
+			pDelayedCommand->m_pszCommand = (char*)Z_Malloc(cbStringSize); // will be freed later
+			Q_strcpy(pDelayedCommand->m_pszCommand, str);
+			pDelayedCommand->m_dblTimeUntilExecution = realtime + 1.0; // if no "ban" command appears here for the next 1 second, this entry will be wiped
+			pDelayedCommand->m_pNext = NULL;
+			pDelayedCommand->m_nUserID = nUserID;
+
+			if (!g_pGameBanDelayedCommandHead) // this is the head of the list
+			{
+				g_pGameBanDelayedCommandHead = pDelayedCommand;
+				g_pGameBanDelayedCommandTail = pDelayedCommand;
+			}
+			else
+			{
+				g_pGameBanDelayedCommandTail->m_pNext = pDelayedCommand;
+				pDelayedCommand->m_pPrev = g_pGameBanDelayedCommandTail;
+				g_pGameBanDelayedCommandTail = pDelayedCommand;
+			}
+
+			Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, delaying the command...\n", __func__);
+
+			return;
+		}
+		if (!Q_strnicmp(str, "banid", sizeof("banid") - 1))
+		{
+			pszTemp = Mem_Strdup(str);
+			if (Q_strchr(pszTemp, '\n'))
+				pszTemp[strcspn(pszTemp, "\n")] = '\0';
+
+			pszSteamID = strstr(pszTemp, "STEAM_");
+
+			if (pszSteamID)
+			{
+				pDelayedCommand = g_pGameBanDelayedCommandHead;
+
+				while (pDelayedCommand)
+				{
+					for (i = 0, pSearch = g_psvs.clients; i < g_psvs.maxclients; i++)
+					{
+						if (pSearch->userid == pDelayedCommand->m_nUserID)
+						{
+							pszNeededID = SV_GetClientIDString(pSearch);
+							break;
+						}
+					}
+
+					if (!Q_strcmp(pszNeededID, pszSteamID))
+					{
+						pNeededCommand = pDelayedCommand;
+						break;
+					}
+
+					pDelayedCommand = pDelayedCommand->m_pNext;
+				}
+
+				if (pNeededCommand)
+				{
+					Z_Free(pNeededCommand->m_pszCommand);
+					pNeededCommand->m_pszCommand = NULL;
+					pNeededCommand->m_dblTimeUntilExecution = -1.0;
+
+					if (pNeededCommand == g_pGameBanDelayedCommandHead)
+					{
+						g_pGameBanDelayedCommandHead = g_pGameBanDelayedCommandHead->m_pNext;
+						if (g_pGameBanDelayedCommandHead)
+						{
+							g_pGameBanDelayedCommandHead->m_pPrev = NULL;
+						}
+						else
+						{
+							g_pGameBanDelayedCommandTail = NULL;
+						}
+					}
+					else if (pNeededCommand == g_pGameBanDelayedCommandTail)
+					{
+						g_pGameBanDelayedCommandTail = g_pGameBanDelayedCommandTail->m_pPrev;
+						if (g_pGameBanDelayedCommandTail)
+						{
+							g_pGameBanDelayedCommandTail->m_pNext = NULL;
+						}
+						else
+						{
+							g_pGameBanDelayedCommandHead = NULL;
+						}
+					}
+					else
+					{
+						if (pNeededCommand->m_pPrev)
+						{
+							pNeededCommand->m_pPrev->m_pNext = pNeededCommand->m_pNext;
+						}
+						if (pNeededCommand->m_pNext)
+						{
+							pNeededCommand->m_pNext->m_pPrev = pNeededCommand->m_pPrev;
+						}
+					}
+
+					Z_Free(pNeededCommand);
+
+					Con_Printf("%s: received a banid command (%s) right after kick command, this is a game ban. Aborting.\n", __func__, pszTemp);
+				}
+			}
+			else
+			{
+				Con_Printf("%s: no STEAM id specified in banid command, this is probably not a game ban command\n", __func__);
+			}
+
+			Mem_Free(pszTemp);
+		}
+	}
+#endif //defined(REHLDS_FIXES) and defined(REHLDS_SVEN)
+
 	if (ValidCmd(str))
 		Cbuf_AddText(str);
 	else

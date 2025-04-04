@@ -374,6 +374,31 @@ extern cvar_t sv_rehlds_attachedentities_playeranimationspeed_fix;
 extern cvar_t sv_rehlds_local_gametime;
 extern cvar_t sv_rehlds_send_mapcycle;
 extern cvar_t sv_usercmd_custom_random_seed;
+#ifdef REHLDS_SVEN
+// xWhitey: You see, there's a large problem with the Sven Co-op developers team: they're freaking bastards.
+// I was doing crazy shit like crashing and exploding servers hoping that they'll do at least something to prevent me
+// At least, for example, fix the exploits I was abusing (because some of them were publicly available lmao)
+// But as I've already written, it isn't actually a team of good people - they're bastards.
+// (Well I'd say there are some _good_ people in their team)
+// Instead of working on the game, they (probably) jacked off for the entire time since 5.25 release.
+// When 5.26 release candidate 1 got released, I stumbled upon a game ban as well as my friends did, but they were **BLACKLISTED** in the game .dll
+// (means they'd get kicked and banned even if gameinfo.svencoop.com is down)
+// Meanwhile I was banned via the CPlayerDatabase way (Like how donors work)
+// So what's the problem? It's simple - they "shadow ban" (as they named it) players they don't like - my h0m1es (e.g. root, sh0tx) and me.
+// Before they threw a VAC ban on one of my pals and I'm one hundred percent sure it was done by them because some bozo did a report.
+// We can't join any server - we get insta-kicked and insta-banned
+// This thing will be a solution against that and I enabled this convar by default so they suck a huge dick lmfao.
+typedef struct GameBanDelayedCommand_s {
+	char* m_pszCommand;
+	int m_nUserID;
+	double m_dblTimeUntilExecution; // TODO: Maybe make configurable?
+	struct GameBanDelayedCommand_s* m_pNext;
+	struct GameBanDelayedCommand_s* m_pPrev;
+} GameBanDelayedCommand_t;
+extern cvar_t sv_rehlds_sven_block_game_bans;
+extern GameBanDelayedCommand_t* g_pGameBanDelayedCommandHead;
+extern GameBanDelayedCommand_t* g_pGameBanDelayedCommandTail;
+#endif // REHLDS_SVEN
 #endif
 extern int sv_playermodel;
 

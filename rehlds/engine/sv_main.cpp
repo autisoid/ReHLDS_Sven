@@ -255,6 +255,11 @@ cvar_t sv_rehlds_send_mapcycle = { "sv_rehlds_send_mapcycle", "0", 0, 0.0f, null
 cvar_t sv_rehlds_maxclients_from_single_ip = { "sv_rehlds_maxclients_from_single_ip", "5", 0, 5.0f, nullptr };
 cvar_t sv_use_entity_file = { "sv_use_entity_file", "0", 0, 0.0f, nullptr };
 cvar_t sv_usercmd_custom_random_seed = { "sv_usercmd_custom_random_seed", "0", 0, 0.0f, nullptr };
+#ifdef REHLDS_SVEN
+cvar_t sv_rehlds_sven_block_game_bans = { "sv_rehlds_sven_block_game_bans", "1", 0, 1.0f, nullptr };
+GameBanDelayedCommand_t* g_pGameBanDelayedCommandHead;
+GameBanDelayedCommand_t* g_pGameBanDelayedCommandTail;
+#endif // REHLDS_SVEN
 #endif
 
 delta_t *SV_LookupDelta(char *name)
@@ -8362,6 +8367,10 @@ void SV_Init(void)
 	Cvar_RegisterVariable(&sv_rehlds_local_gametime);
 	Cvar_RegisterVariable(&sv_rehlds_send_mapcycle);
 	Cvar_RegisterVariable(&sv_rehlds_maxclients_from_single_ip);
+
+#ifdef REHLDS_SVEN
+	Cvar_RegisterVariable(&sv_rehlds_sven_block_game_bans);
+#endif // REHLDS_SVEN
 
 	Cvar_RegisterVariable(&sv_rollspeed);
 	Cvar_RegisterVariable(&sv_rollangle);
