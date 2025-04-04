@@ -987,6 +987,10 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 					Z_Free(pNeededCommand);
 
 					Con_Printf("%s: received a banid command (%s) right after kick command, this is a game ban. Aborting.\n", __func__, pszTemp);
+
+					Mem_Free(pszTemp);
+
+					return;
 				}
 			}
 			else
