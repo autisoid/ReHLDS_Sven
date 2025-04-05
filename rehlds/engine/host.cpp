@@ -1030,8 +1030,8 @@ void Host_Version(void)
 {
 	char szFileName[MAX_PATH];
 
-	Q_strcpy(gpszVersionString, "1.0.1.4");
-	Q_strcpy(gpszProductString, "valve");
+	Q_strcpy(gpszVersionString, "5.0.18");
+	Q_strcpy(gpszProductString, "svencoop");
 	Q_strcpy(szFileName, "steam.inf");
 	FileHandle_t fp = FS_Open(szFileName, "r");
 	if (fp)
