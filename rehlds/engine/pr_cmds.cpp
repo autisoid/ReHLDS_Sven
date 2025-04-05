@@ -871,27 +871,34 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 			if (!cNumScanned)
 			{
 				Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, but cannot read the player ID!\n", __func__);
-				return;
+				goto execute_command;
 			}
 			cbStringSize = Q_strlen(str) + 1;
 
-			if (nUserID > g_psvs.maxclients)
+			if (nUserID <= 0 || nUserID > g_psvs.maxclients)
 			{
-				Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, but the player ID is above the limit!\n", __func__);
-				return;
+				Con_Printf("%s: suspected an attempt of game .DLL shadow banning a player, but the player ID is out of range!\n", __func__);
+				goto execute_command;
 			}
 
-			pDelayedCommand = (GameBanDelayedCommand_t*)Z_Malloc(sizeof(GameBanDelayedCommand_t));
+			pDelayedCommand = (GameBanDelayedCommand_t*)Mem_Malloc(sizeof(GameBanDelayedCommand_t));
 			if (!pDelayedCommand)
 			{
 				Con_Printf("%s: failure allocating memory for a GameBanDelayedCommand_t entry\n", __func__);
-				return;
+				goto execute_command;
 			}
 
-			pDelayedCommand->m_pszCommand = (char*)Z_Malloc(cbStringSize); // will be freed later
+			pDelayedCommand->m_pszCommand = (char*)Mem_Malloc(cbStringSize); // will be freed later
+			if (!pDelayedCommand->m_pszCommand)
+			{
+				Con_Printf("%s: failure allocating memory for command string\n", __func__);
+				Mem_Free(pDelayedCommand);
+				goto execute_command;
+			}
 			Q_strcpy(pDelayedCommand->m_pszCommand, str);
 			pDelayedCommand->m_dblTimeUntilExecution = realtime + 1.0; // if no "ban" command appears here for the next 1 second, this entry will be wiped
 			pDelayedCommand->m_pNext = NULL;
+			pDelayedCommand->m_pPrev = NULL;
 			pDelayedCommand->m_nUserID = nUserID;
 
 			if (!g_pGameBanDelayedCommandHead) // this is the head of the list
@@ -913,10 +920,16 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 		if (!Q_strnicmp(str, "banid", sizeof("banid") - 1))
 		{
 			pszTemp = Mem_Strdup(str);
+			if (!pszTemp)
+			{
+				Con_Printf("%s: failure allocating memory for string command copy\n", __func__);
+				goto execute_command;
+			}
+
 			if (Q_strchr(pszTemp, '\n'))
 				pszTemp[strcspn(pszTemp, "\n")] = '\0';
 
-			pszSteamID = strstr(pszTemp, "STEAM_");
+			pszSteamID = Q_strstr(pszTemp, "STEAM_");
 
 			if (pszSteamID)
 			{
@@ -924,6 +937,8 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 
 				while (pDelayedCommand)
 				{
+					pszNeededID = NULL;
+
 					for (i = 0, pSearch = g_psvs.clients; i < g_psvs.maxclients; i++)
 					{
 						if (pSearch->userid == pDelayedCommand->m_nUserID)
@@ -933,7 +948,7 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 						}
 					}
 
-					if (!Q_strcmp(pszNeededID, pszSteamID))
+					if (pszNeededID && !Q_strcmp(pszNeededID, pszSteamID))
 					{
 						pNeededCommand = pDelayedCommand;
 						break;
@@ -944,7 +959,7 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 
 				if (pNeededCommand)
 				{
-					Z_Free(pNeededCommand->m_pszCommand);
+					Mem_Free(pNeededCommand->m_pszCommand);
 					pNeededCommand->m_pszCommand = NULL;
 					pNeededCommand->m_dblTimeUntilExecution = -1.0;
 
@@ -984,10 +999,8 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 						}
 					}
 
-					Z_Free(pNeededCommand);
-
+					Mem_Free(pNeededCommand);
 					Con_Printf("%s: received a banid command (%s) right after kick command, this is a game ban. Aborting.\n", __func__, pszTemp);
-
 					Mem_Free(pszTemp);
 
 					return;
@@ -1003,6 +1016,7 @@ void EXT_FUNC PF_localcmd_I(const char *str)
 	}
 #endif //defined(REHLDS_FIXES) and defined(REHLDS_SVEN)
 
+execute_command:
 	if (ValidCmd(str))
 		Cbuf_AddText(str);
 	else

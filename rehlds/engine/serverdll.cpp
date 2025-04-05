@@ -11,7 +11,7 @@ SV_EndFrame
 Physics have been integrated, notify the game dll the current frame has ended
 ====================
 */
-void SV_EndFrame( void )
+void SV_EndFrame(void)
 {
 #if defined(REHLDS_FIXES) && defined(REHLDS_SVEN)
 	GameBanDelayedCommand_t* pCommand;
@@ -28,19 +28,28 @@ void SV_EndFrame( void )
 
 	while (pCommand)
 	{
-		if (pCommand->m_dblTimeUntilExecution < realtime)
+		if (pCommand->m_dblTimeUntilExecution <= realtime)
 		{
 			Con_Printf("%s: kick command for player id %d has expired, executing it\n", __func__, pCommand->m_nUserID);
 
-			Cbuf_AddText(pCommand->m_pszCommand);
-
-			Z_Free(pCommand->m_pszCommand);
-			pCommand->m_pszCommand = NULL;
-			pCommand->m_dblTimeUntilExecution = -1.0;
-
-			if (pCommand == g_pGameBanDelayedCommandHead)
+			if (pCommand->m_pszCommand)
 			{
-				g_pGameBanDelayedCommandHead = g_pGameBanDelayedCommandHead->m_pNext;
+				Cbuf_AddText(pCommand->m_pszCommand);
+				Mem_Free(pCommand->m_pszCommand);
+				pCommand->m_pszCommand = NULL;
+			}
+			else
+			{
+				Con_Printf("%s: WARNING: empty command string for player id %d!\n", __func__, pCommand->m_nUserID);
+			}
+
+			pTemp = pCommand;
+			pCommand = pTemp->m_pNext;
+
+			// update list pointers first, then free to avoid use-after-free
+			if (pTemp == g_pGameBanDelayedCommandHead)
+			{
+				g_pGameBanDelayedCommandHead = pCommand;
 				if (g_pGameBanDelayedCommandHead)
 				{
 					g_pGameBanDelayedCommandHead->m_pPrev = NULL;
@@ -50,9 +59,9 @@ void SV_EndFrame( void )
 					g_pGameBanDelayedCommandTail = NULL;
 				}
 			}
-			else if (pCommand == g_pGameBanDelayedCommandTail)
+			else if (pTemp == g_pGameBanDelayedCommandTail)
 			{
-				g_pGameBanDelayedCommandTail = g_pGameBanDelayedCommandTail->m_pPrev;
+				g_pGameBanDelayedCommandTail = pTemp->m_pPrev;
 				if (g_pGameBanDelayedCommandTail)
 				{
 					g_pGameBanDelayedCommandTail->m_pNext = NULL;
@@ -64,21 +73,17 @@ void SV_EndFrame( void )
 			}
 			else
 			{
-				if (pCommand->m_pPrev)
+				if (pTemp->m_pPrev)
 				{
-					pCommand->m_pPrev->m_pNext = pCommand->m_pNext;
+					pTemp->m_pPrev->m_pNext = pTemp->m_pNext;
 				}
-				if (pCommand->m_pNext)
+				if (pTemp->m_pNext)
 				{
-					pCommand->m_pNext->m_pPrev = pCommand->m_pPrev;
+					pTemp->m_pNext->m_pPrev = pTemp->m_pPrev;
 				}
 			}
 
-			pTemp = pCommand;
-			pCommand = pTemp->m_pNext;
-			Z_Free(pTemp);
-			pTemp = NULL;
-
+			Mem_Free(pTemp);
 			continue;
 		}
 
