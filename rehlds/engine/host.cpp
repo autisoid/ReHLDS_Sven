@@ -1132,8 +1132,8 @@ int Host_Init(quakeparms_t *parms)
 	COM_Init(parms->basedir);
 	Host_ClearSaveDirectory();
 	HPAK_Init();
-	W_LoadWadFile("gfx.wad");
-	W_LoadWadFile("fonts.wad");
+	//W_LoadWadFile("gfx.wad");
+	//W_LoadWadFile("fonts.wad");
 	Key_Init();
 	Con_Init();
 	Decal_Init();

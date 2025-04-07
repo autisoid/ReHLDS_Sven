@@ -51,4 +51,5 @@ typedef struct modinfo_s
 	MOD_GAMEPLAY_TYPE_E type;
 	int num_edicts;
 	qboolean clientcrccheck;
+	qboolean bIgnoreEventFiles;
 } modinfo_t;

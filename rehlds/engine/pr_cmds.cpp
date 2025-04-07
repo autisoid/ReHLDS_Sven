@@ -1276,19 +1276,32 @@ unsigned short EXT_FUNC EV_Precache_internal(int type, const char *psz)
 		for (int i = 1; i < MAX_EVENTS; i++)
 		{
 			struct event_s* ev = &g_psv.event_precache[i];
+
+			int scriptSize = 0;
+			char* evScript = 0;
+			
 			if (!ev->filename)
 			{
-				if (type != 1)
-					Host_Error("%s:  only file type 1 supported currently\n", __func__);
+				// ScriptedSnark: original HLDS code fails to load non-existing events, Svengine has extra logic for this.
+				// See "event_system" in decompile (engine_i686.so | 5.26)
+				if (!gmodinfo.bIgnoreEventFiles)
+				{
+					if (type != 1)
+						Host_Error("%s:  only file type 1 supported currently\n", __func__);
 
-				char szpath[MAX_PATH];
-				Q_snprintf(szpath, sizeof(szpath), "%s", psz);
-				COM_FixSlashes(szpath);
-
-				int scriptSize = 0;
-				char* evScript = (char*) COM_LoadFile(szpath, 5, &scriptSize);
-				if (!evScript)
-					Host_Error("%s:  file %s missing from server\n", __func__, psz);
+					char szpath[MAX_PATH];
+					Q_snprintf(szpath, sizeof(szpath), "%s", psz);
+					COM_FixSlashes(szpath);
+					
+					evScript = (char*) COM_LoadFile(szpath, 5, &scriptSize);
+					if (!evScript)
+						Host_Error("%s:  file %s missing from server\n", __func__, psz);
+				}
+				else
+				{
+					scriptSize = 0;
+					evScript = 0;
+				}
 #ifdef REHLDS_FIXES
 				// Many modders don't know that the resource names passed to precache functions must be a static strings.
 				// Also some metamod modules can be unloaded during the server running.

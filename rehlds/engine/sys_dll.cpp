@@ -860,6 +860,12 @@ void DLL_SetModKey(modinfo_t *pinfo, char *pkey, char *pvalue)
 	{
 		COM_AddDefaultDir(pvalue);
 	}
+	// ScriptedSnark: I don't think I'll implement other keys like "largemap_aware", "vertical_fov", "sdl_input"
+	// Let's just do only those things which are necessary to get ReHLDS work properly with Sven Co-op.
+	else if (!Q_stricmp(pkey, "ignore_event_files"))
+	{
+		pinfo->bIgnoreEventFiles = 1;
+	}
 
 }
 

@@ -30,8 +30,10 @@
 
 typedef struct event_s
 {
-	unsigned short index;
-	const char *filename;
-	int filesize;
-	const char *pszScript;
+  int unknown1;
+  int unknown2;
+  unsigned short index;
+  const char *filename;
+  int filesize;
+  const char *pszScript;
 } event_t;
