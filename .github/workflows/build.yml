@@ -59,7 +59,7 @@ jobs:
         run: |
           mkdir publish\debug
           mkdir publish\tests
-          mkdir publish\bin\win32\valve\dlls
+          mkdir publish\bin\win32\svencoop\dlls
           move "msvc\${{ env.buildReleasePlay }}\swds.dll" publish\tests\swds.dll
           move msvc\${{ env.buildRelease }}\hlds.exe publish\bin\win32\hlds.exe
           move msvc\${{ env.buildRelease }}\hltv.exe publish\bin\win32\hltv.exe
@@ -68,7 +68,7 @@ jobs:
           move msvc\${{ env.buildRelease }}\proxy.dll publish\bin\win32\proxy.dll
           move msvc\${{ env.buildRelease }}\demoplayer.dll publish\bin\win32\demoplayer.dll
           move msvc\${{ env.buildRelease }}\filesystem_stdio.dll publish\bin\win32\filesystem_stdio.dll
-          move msvc\${{ env.buildRelease }}\director.dll publish\bin\win32\valve\dlls\director.dll
+          move msvc\${{ env.buildRelease }}\director.dll publish\bin\win32\svencoop\dlls\director.dll
           move msvc\${{ env.buildRelease }}\hlds.pdb publish\debug\hlds.pdb
           move msvc\${{ env.buildRelease }}\hltv.pdb publish\debug\hltv.pdb
           move msvc\${{ env.buildRelease }}\swds.pdb publish\debug\swds.pdb
@@ -108,7 +108,7 @@ jobs:
                & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x86\signtool.exe' sign /a /f "${{ github.workspace }}\signing-cert.pfx"  /p $env:KEY_PFX_PASS /d "ReHLDS - proxy.dll" /du "https://rehlds.dev/" /tr "http://timestamp.digicert.com" /td sha512 /fd sha512 /v ${{ github.workspace }}\publish\bin\win32\proxy.dll
                & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x86\signtool.exe' sign /a /f "${{ github.workspace }}\signing-cert.pfx"  /p $env:KEY_PFX_PASS /d "ReHLDS - demoplayer.dll" /du "https://rehlds.dev/" /tr "http://timestamp.digicert.com" /td sha512 /fd sha512 /v ${{ github.workspace }}\publish\bin\win32\demoplayer.dll
                & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x86\signtool.exe' sign /a /f "${{ github.workspace }}\signing-cert.pfx"  /p $env:KEY_PFX_PASS /d "ReHLDS - filesystem_stdio.dll" /du "https://rehlds.dev/" /tr "http://timestamp.digicert.com" /td sha512 /fd sha512 /v ${{ github.workspace }}\publish\bin\win32\filesystem_stdio.dll
-               & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x86\signtool.exe' sign /a /f "${{ github.workspace }}\signing-cert.pfx"  /p $env:KEY_PFX_PASS /d "ReHLDS - director.dll" /du "https://rehlds.dev/" /tr "http://timestamp.digicert.com" /td sha512 /fd sha512 /v ${{ github.workspace }}\publish\bin\win32\valve\dlls\director.dll
+               & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x86\signtool.exe' sign /a /f "${{ github.workspace }}\signing-cert.pfx"  /p $env:KEY_PFX_PASS /d "ReHLDS - director.dll" /du "https://rehlds.dev/" /tr "http://timestamp.digicert.com" /td sha512 /fd sha512 /v ${{ github.workspace }}\publish\bin\win32\svencoop\dlls\director.dll
                Remove-Item -Recurse -Force "${{ github.workspace }}\signing-cert.pfx"
         shell: "pwsh"
 
@@ -262,7 +262,7 @@ jobs:
 
       - name: Move files
         run: |
-          mkdir -p publish/bin/linux32/valve/dlls
+          mkdir -p publish/bin/linux32/svencoop/dlls
           mv build/rehlds/engine_i486.so publish/bin/linux32/engine_i486.so
           mv rehlds/version/appversion.h publish/appversion.h
           mv build/rehlds/dedicated/hlds_linux publish/bin/linux32/hlds_linux
@@ -270,7 +270,7 @@ jobs:
           mv build/rehlds/HLTV/Core/core.so publish/bin/linux32/core.so
           mv build/rehlds/HLTV/Proxy/proxy.so publish/bin/linux32/proxy.so
           mv build/rehlds/HLTV/DemoPlayer/demoplayer.so publish/bin/linux32/demoplayer.so
-          mv build/rehlds/HLTV/Director/director.so publish/bin/linux32/valve/dlls/director.so
+          mv build/rehlds/HLTV/Director/director.so publish/bin/linux32/svencoop/dlls/director.so
           mv build/rehlds/filesystem/FileSystem_Stdio/filesystem_stdio.so publish/bin/linux32/filesystem_stdio.so
 
       - name: Run GLIBC/ABI version compat test
@@ -282,7 +282,7 @@ jobs:
             "publish/bin/linux32/core.so"
             "publish/bin/linux32/proxy.so"
             "publish/bin/linux32/demoplayer.so"
-            "publish/bin/linux32/valve/dlls/director.so"
+            "publish/bin/linux32/svencoop/dlls/director.so"
             "publish/bin/linux32/filesystem_stdio.so"
           )
           bash ./rehlds/version/glibc_test.sh ${binaries[@]}
