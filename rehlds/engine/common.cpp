@@ -2306,7 +2306,7 @@ qboolean COM_SetupDirectories(void)
 	com_clientfallback[0] = 0;
 	com_gamedir[0] = 0;
 
-	COM_ParseDirectoryFromCmd("-basedir", pDirName, "valve");
+	COM_ParseDirectoryFromCmd("-basedir", pDirName, "svencoop");
 	COM_ParseDirectoryFromCmd("-game", com_gamedir, pDirName);
 
 	if (FileSystem_SetGameDirectory(pDirName, (const char *)(com_gamedir[0] != 0 ? com_gamedir : 0)))

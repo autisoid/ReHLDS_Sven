@@ -281,7 +281,7 @@ void CheckLiblistForFallbackDir(const char *pGameDir, bool bLanguage, const char
 	COM_FixSlashes(szTemp);
 	g_pFileSystem->AddSearchPath(szTemp, "GAME_FALLBACK");
 
-	if (Q_stricmp(szFallback, "valve"))
+	if (Q_stricmp(szFallback, "svencoop"))
 	{
 		const int BufLen = 256;
 		char *szFileName = new char[BufLen];

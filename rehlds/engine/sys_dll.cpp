@@ -892,7 +892,7 @@ void LoadEntityDLLs(const char* szBaseDir)
 	Q_memset(g_rgextdll, 0, sizeof(g_rgextdll));
 
 	Q_strncpy(szGameDir, com_gamedir, sizeof(szGameDir) - 1);
-	if (Q_stricmp(szGameDir, "valve"))
+	if (Q_stricmp(szGameDir, "svencoop"))
 		gmodinfo.bIsMod = 1;
 
 	Q_snprintf(szDllListFile, sizeof(szDllListFile), "%s", "liblist.gam");
@@ -976,13 +976,13 @@ void LoadEntityDLLs(const char* szBaseDir)
 	else
 	{
 #ifdef _WIN32
-		Q_snprintf(szDllWildcard, sizeof(szDllWildcard), "%s\\*.dll", "valve\\dlls");
+		Q_snprintf(szDllWildcard, sizeof(szDllWildcard), "%s\\*.dll", "svencoop\\dlls");
 #else // _WIN32
-		Q_snprintf(szDllWildcard, sizeof(szDllWildcard), "%s\\*.so", "valve\\dlls");
+		Q_snprintf(szDllWildcard, sizeof(szDllWildcard), "%s\\*.so", "svencoop\\dlls");
 #endif // _WIN32
 		for (findfn = Sys_FindFirst(szDllWildcard, 0); findfn; findfn = Sys_FindNext(0))
 		{
-			Q_snprintf(szDllFilename, sizeof(szDllWildcard), "%s/%s/%s", szBaseDir, "valve\\dlls", findfn);
+			Q_snprintf(szDllFilename, sizeof(szDllWildcard), "%s/%s/%s", szBaseDir, "svencoop\\dlls", findfn);
 			LoadThisDll(szDllFilename);
 		}
 		Sys_FindClose();
