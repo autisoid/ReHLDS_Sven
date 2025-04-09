@@ -4,6 +4,8 @@ Reverse-engineered (and bugfixed) HLDS
 ## What is this?
 ReHLDS is a result of reverse engineering of original HLDS (build 6152/6153) using DWARF debug info embedded into linux version of HLDS, engine_i486.so
 
+Meahwhile, ReHLDS_Sven is an extension to the original ReHLDS project, which adds support of the Sven Co-op (Svengine, a game engine based on the original Half-Life 1 engine - GoldSrc) protocol.
+
 Along with reverse engineering, a lot of defects and (potential) bugs were found and fixed
 
 You can try playing on one of many servers that are using ReHLDS: [Game Tracker](http://www.gametracker.com/search/?search_by=server_variable&search_by2=sv_version)
@@ -19,31 +21,32 @@ You can try playing on one of many servers that are using ReHLDS: [Game Tracker]
 
 ## Goals of the project
 <ul>
-<li>Provide more stable (than official) version of Half-Life dedicated server with extended API for mods and plugins</li>
+<li>Provide more stable (than official) version of Sven Co-op dedicated server with extended API for mods and plugins</li>
 <li>Performance optimizations (use of SSE for vector math for example) is another goal for the future</li>
 </ul>
 
 ## How can use it?
-ReHLDS is fully compatible with the official pre-anniversary edition of HLDS (engine version <= 8684) downloaded by steamcmd. All you have to do is to download ReHLDS binaries and replace original swds.dll/engine_i486.so. For windows you can also copy a swds.pdb file with a debug information.
+~~ReHLDS is fully compatible with the official pre-anniversary edition of HLDS (engine version <= 8684) downloaded by steamcmd. All you have to do is to download ReHLDS binaries and replace original swds.dll/engine_i486.so. For windows you can also copy a swds.pdb file with a debug information.~~
+
+ReHLDS_Sven is fully compatible with the official SvenDS binaries, although requires replacing `libsteam_api.so` (located at `rehlds/lib(/linux32)`) and `steamclient.so` (either take it from our releases or from steamcmd) to work.
 
 > [!CAUTION]  
 > ReHLDS is not compatible with an old 5xxx or below platforms downloaded by hldsupdatetool.
 
-#### Downloading HLDS via steamcmd
+#### Downloading SvenDS via steamcmd
 
 ```
-app_set_config 90 mod cstrike
-app_update 90 -beta steam_legacy validate
+app_update 276060 validate
 ```
 
 ## Downloads
-* [Release builds](https://github.com/rehlds/ReHLDS/releases)
-* [Dev builds](https://github.com/rehlds/ReHLDS/actions/workflows/build.yml)
+* [Release builds](https://github.com/autisoid/ReHLDS/releases)
+* ~~[Dev builds](https://github.com/rehlds/ReHLDS/actions/workflows/build.yml)~~
 
 ReHLDS binaries require `SSE`, `SSE2` and `SSE3` instruction sets to run and can benefit from `SSE4.1` and `SSE4.2`
 
-<b>Warning!</b> ReHLDS is not binary compatible with original hlds since it's compiled with compilers other than ones used for original hlds.
-This means that plugins that do binary code analysis (Orpheu for example) probably will not work with ReHLDS.
+<b>Warning!</b> ReHLDS_Sven is not binary compatible with original svends since it's compiled with compilers other than ones used for original svends.
+This means that plugins that do binary code analysis (Orpheu for example) probably will not work with ReHLDS_Sven.
 
 ## Configuring
 <details>
@@ -82,6 +85,7 @@ This means that plugins that do binary code analysis (Orpheu for example) probab
 <li>sv_net_incoming_decompression_punish // Time in minutes for which the player will be banned for malformed/abnormal bzip2 fragments (0 - Permanent, use a negative number for a kick). Default: -1
 <li>sv_tags &lt;comma-delimited string list of tags&gt; // Sets a string defining the "gametags" for this server, this is optional, but if it is set it allows users/scripts to filter in the matchmaking/server-browser interfaces based on the value. Default: ""
 <li>sv_filterban &lt;-1|0|1&gt;// Set packet filtering by IP mode. -1 - All players will be rejected without any exceptions. 0 - No checks will happen. 1 - All incoming players will be checked if they're IP banned (if they have an IP filter entry), if they are, they will be kicked. Default: 1
+<li>sv_rehlds_sven_block_game_bans &lt;1|0&gt; // Block shadow bans from game .DLL applied by the game developers. Default: 1
 </ul>
 </details>
 
