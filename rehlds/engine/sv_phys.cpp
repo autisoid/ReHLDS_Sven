@@ -1043,16 +1043,6 @@ void SV_Physics_Toss(edict_t *ent)
 {
 	SV_CheckWater(ent);
 
-#ifdef REHLDS_SVEN
-	// Set SOLID_NOT for dead bodies, so they don't block stuff.
-	// Do this BEFORE Think so the body knows it's non-solid.
-	// xWhitey: This DOES NOT exist in Sven, was made by me so this can probably break some stuff
-	if (ent->v.deadflag == DEAD_DEAD)
-	{
-		ent->v.solid = SOLID_NOT;
-	}
-#endif // REHLDS_SVEN
-
 	// regular thinking
 	if (!SV_RunThink(ent))
 		return;
@@ -1129,16 +1119,6 @@ void SV_Physics_Toss(edict_t *ent)
 void SV_Physics_Bounce(edict_t *ent)
 {
 	SV_CheckWater(ent);
-
-#if defined(REHLDS_SVEN) && !defined(REHLDS_FIXES)
-	// Set SOLID_NOT for dead bodies, so they don't block stuff.
-	// Do this BEFORE Think so the body knows it's non-solid.
-	// xWhitey: This DOES NOT exist in Sven, was made by me so this can probably break some stuff
-	if (ent->v.deadflag == DEAD_DEAD)
-	{
-		ent->v.solid = SOLID_NOT;
-	}
-#endif // defined(REHLDS_SVEN) and not defined(REHLDS_FIXES)
 
 	// regular thinking
 	if (!SV_RunThink(ent))

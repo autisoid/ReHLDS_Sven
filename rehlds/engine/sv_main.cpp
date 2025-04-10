@@ -4927,6 +4927,13 @@ void SV_WriteEntitiesToClient(client_t *client, sizebuf_t *msg)
 
 		edict_t* ent = &g_psv.edicts[e];
 
+#ifdef REHLDS_SVEN
+		// xWhitey: Fool the client about non-solidness of dead bodies lying around the map
+		int eOldSolid = ent->v.solid;
+		if (ent->v.deadflag == DEAD_DEAD && ent->v.movetype == MOVETYPE_TOSS)
+			ent->v.solid = SOLID_NOT;
+#endif // REHLDS_SVEN
+
 #ifdef REHLDS_OPT_PEDANTIC
 		//Part of gamedll's code is moved here to decrease amount of calls to AddToFullPack()
 		//We don't even try to transmit entities without model as well as invisible entities
@@ -4940,6 +4947,10 @@ void SV_WriteEntitiesToClient(client_t *client, sizebuf_t *msg)
 		if (add)
 			++curPack->num_entities;
 #endif //REHLDS_OPT_PEDANTIC
+
+#ifdef REHLDS_SVEN
+		ent->v.solid = eOldSolid;
+#endif // REHLDS_SVEN
 	}
 
 #ifdef REHLDS_FIXES
