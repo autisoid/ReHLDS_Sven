@@ -222,6 +222,7 @@ jobs:
           #export for global use
           echo "GPG_LINUX_FINGERPRINT=$GPG_LINUX_FINGERPRINT" >> $GITHUB_ENV
         shell: bash
+        if: github.event_name != 'pull_request'
 
       - name: Build and Run unittests
         run: |
