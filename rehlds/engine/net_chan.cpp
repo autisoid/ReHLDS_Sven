@@ -508,12 +508,18 @@ void Netchan_Transmit(netchan_t *chan, int length, byte *data)
 		chan->last_reliable_sequence = chan->outgoing_sequence - 1;
 	}
 
+#ifndef REHLDS_SVEN
 	// Is there room for the unreliable payload?
 	int max_send_size = MAX_ROUTEABLE_PACKET;
 	if (!send_resending)
 		max_send_size = sb_send.maxsize;
 
-	if ((max_send_size - sb_send.cursize) >= length) {
+	if ((max_send_size - sb_send.cursize) >= length)
+#else // REHLDS_SVEN
+	// xWhitey: In Sven, Netchan_TransmitBits, the function doesn't care about MAX_ROUTABLE_PACKET and send_resending
+	if ((sb_send.maxsize - sb_send.cursize) >= length)
+#endif // !REHLDS_SVEN
+	{
 		SZ_Write(&sb_send, data, length);
 	}
 	else {

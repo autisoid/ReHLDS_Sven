@@ -31,7 +31,7 @@
 #include "quakedef.h"
 
 // max number of sentences in game. NOTE: this must match CVOXFILESENTENCEMAX in dlls\util.h!!!
-const int CVOXFILESENTENCEMAX = 1536;
+const int CVOXFILESENTENCEMAX = 2048;
 
 typedef struct sfx_s
 {

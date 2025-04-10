@@ -1043,6 +1043,16 @@ void SV_Physics_Toss(edict_t *ent)
 {
 	SV_CheckWater(ent);
 
+#ifdef REHLDS_SVEN
+	// Set SOLID_NOT for dead bodies, so they don't block stuff.
+	// Do this BEFORE Think so the body knows it's non-solid.
+	// xWhitey: This DOES NOT exist in Sven, was made by me so this can probably break some stuff
+	if (ent->v.deadflag == DEAD_DEAD)
+	{
+		ent->v.solid = SOLID_NOT;
+	}
+#endif // REHLDS_SVEN
+
 	// regular thinking
 	if (!SV_RunThink(ent))
 		return;
@@ -1119,6 +1129,16 @@ void SV_Physics_Toss(edict_t *ent)
 void SV_Physics_Bounce(edict_t *ent)
 {
 	SV_CheckWater(ent);
+
+#if defined(REHLDS_SVEN) && !defined(REHLDS_FIXES)
+	// Set SOLID_NOT for dead bodies, so they don't block stuff.
+	// Do this BEFORE Think so the body knows it's non-solid.
+	// xWhitey: This DOES NOT exist in Sven, was made by me so this can probably break some stuff
+	if (ent->v.deadflag == DEAD_DEAD)
+	{
+		ent->v.solid = SOLID_NOT;
+	}
+#endif // defined(REHLDS_SVEN) and not defined(REHLDS_FIXES)
 
 	// regular thinking
 	if (!SV_RunThink(ent))
@@ -1512,10 +1532,12 @@ void SV_Physics()
 			SV_Physics_Step(ent);
 			break;
 		case MOVETYPE_TOSS:
+//#ifndef REHLDS_SVEN
 #ifdef REHLDS_FIXES
 			SV_Physics_Toss(ent);
 			break;
-#endif
+#endif // REHLDS_FIXES
+//#endif // !REHLDS_SVEN
 		case MOVETYPE_BOUNCE:
 		case MOVETYPE_BOUNCEMISSILE:
 		case MOVETYPE_FLY:

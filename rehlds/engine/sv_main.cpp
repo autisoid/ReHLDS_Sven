@@ -836,7 +836,11 @@ int EXT_FUNC SV_LookupSoundIndex(const char *sample)
 		SV_BuildHashedSoundLookupTable();
 	}
 
+#ifndef REHLDS_SVEN
 	int starting_index = SV_HashString(sample, 1023);
+#else // REHLDS_SVEN
+	int starting_index = SV_HashString(sample, MAX_SOUNDS_HASHLOOKUP_SIZE);
+#endif // !REHLDS_SVEN
 	index = starting_index;
 	while (g_psv.sound_precache_hashedlookup[index])
 	{
