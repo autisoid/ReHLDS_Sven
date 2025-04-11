@@ -21,6 +21,8 @@ jobs:
       solution: 'msvc/ReHLDS.sln'
       buildPlatform: 'Win32'
       buildRelease: 'Release'
+      buildReleasePlay: 'Release Play'
+      buildTest: 'Test Fixes'
 
     steps:
       - name: Configure
@@ -110,7 +112,7 @@ jobs:
 
       - name: Build using GCC Compiler
         run: |
-          rm -rf build && cmake -B build && cmake --build build -j8
+          rm -rf build && ./build.sh --compiler=gcc
 
       - name: Prepare HLSDK
         run: |
