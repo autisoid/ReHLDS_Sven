@@ -110,8 +110,15 @@ jobs:
       - name: Configure
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          
       - name: Build using GCC Compiler
-        run: ls && ./build.sh --compiler=gcc
+        run: ./build.sh --compiler=gcc
 
       - name: Prepare HLSDK
         run: |
