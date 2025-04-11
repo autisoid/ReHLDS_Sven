@@ -111,7 +111,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Build using GCC Compiler
-        run: cd "$GITHUB_WORKSPACE" && ./build.sh --compiler=gcc
+        run: ls && ./build.sh --compiler=gcc
 
       - name: Prepare HLSDK
         run: |
