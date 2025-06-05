@@ -1179,7 +1179,11 @@ void ReleaseEntityDlls(void)
 		}
 		pextdll++;
 	}
+	// Since we're not using Sys_LoadModule if REHLDS_FIXES is on (we use Sys_GetModuleHandle instead)
+	// We don't need to "unload" the Game DLL -- we didn't increment the counter
+#ifndef REHLDS_FIXES
 	Sys_UnloadServerDLL();
+#endif //!REHLDS_FIXES
 	g_psvs.dll_initialized = FALSE;
 }
 

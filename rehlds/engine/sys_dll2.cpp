@@ -676,11 +676,11 @@ bool Sys_LoadServerDLL( const char* modulename )
 	CSysModule* pModule;
 	CreateInterfaceFn pfnFactory;
 	
-#ifdef REHLDS_SVEN
+#ifdef REHLDS_FIXES
 	g_pServerModule = pModule = Sys_GetModuleHandle(modulename);
-#else //!REHLDS_SVEN
+#else //!REHLDS_FIXES
 	g_pServerModule = pModule = Sys_LoadModule(modulename);
-#endif //REHLDS_SVEN
+#endif //REHLDS_FIXES
 
 	if (!pModule)
 		return false;
