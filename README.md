@@ -1,23 +1,14 @@
-# ReHLDS [![C/C++ CI](https://github.com/rehlds/ReHLDS/actions/workflows/build.yml/badge.svg)](https://github.com/rehlds/ReHLDS/actions/workflows/build.yml) [![GitHub release (by tag)](https://img.shields.io/github/downloads/rehlds/ReHLDS/latest/total)](https://github.com/rehlds/ReHLDS/releases/latest) ![GitHub all releases](https://img.shields.io/github/downloads/rehlds/ReHLDS/total) [![Percentage of issues still open](http://isitmaintained.com/badge/open/rehlds/ReHLDS.svg)](http://isitmaintained.com/project/rehlds/ReHLDS "Percentage of issues still open") [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) <img align="right" src="https://user-images.githubusercontent.com/5860435/111066129-040e5e00-84f0-11eb-9e1f-7a7e8611da2b.png" alt="ReHLDS" />
-Reverse-engineered (and bugfixed) HLDS
+# ReHLDS
 
 ## What is this?
 ReHLDS is a result of reverse engineering of original HLDS (build 6152/6153) using DWARF debug info embedded into linux version of HLDS, engine_i486.so
 
-Meahwhile, ReHLDS_Sven is an extension to the original ReHLDS project, which adds support of the Sven Co-op (Svengine, a game engine based on the original Half-Life 1 engine - GoldSrc) protocol.
+**Meanwhile, ReHLDS_Sven is an extension to the original ReHLDS project, which adds support of the Sven Co-op (Svengine, a game engine based on the original Half-Life 1 engine - GoldSrc) protocol.**
 
 Along with reverse engineering, a lot of defects and (potential) bugs were found and fixed
 
 You can try playing on one of many servers that are using ReHLDS: [Game Tracker](http://www.gametracker.com/search/?search_by=server_variable&search_by2=sv_version)
 
-> [!TIP]
-> ReHLDS linux-releases now is signed via `GPG`, pubkey is: `63547829004f07716f7be4856c32c4282e60fb67` and could be found at [https://keyserver.ubuntu.com/](https://keyserver.ubuntu.com/pks/lookup?search=63547829004f07716f7be4856c32c4282e60fb67+&fingerprint=on&op=index).
->
-> How to:
-> 1. [Download](https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x63547829004f07716f7be4856c32c4282e60fb67) `63547829004f07716f7be4856c32c4282e60fb67.asc` key
-> 2. Import: `gpg --import 63547829004f07716f7be4856c32c4282e60fb67.asc`
-> 3. Download release `archive` and `.asc` file.
-> 4. Verify: `gpg --verify some-rehlds.zip.asc some-rehlds.zip`.
 
 ## Goals of the project
 <ul>
@@ -26,12 +17,10 @@ You can try playing on one of many servers that are using ReHLDS: [Game Tracker]
 </ul>
 
 ## How can use it?
-~~ReHLDS is fully compatible with the official pre-anniversary edition of HLDS (engine version <= 8684) downloaded by steamcmd. All you have to do is to download ReHLDS binaries and replace original swds.dll/engine_i486.so. For windows you can also copy a swds.pdb file with a debug information.~~
-
 ReHLDS_Sven is fully compatible with the official SvenDS binaries, although requires replacing `libsteam_api.so` (located at `rehlds/lib(/linux32)`) and `steamclient.so` (either take it from our releases or from steamcmd) to work.
 
 > [!CAUTION]  
-> ReHLDS is not compatible with an old 5xxx or below platforms downloaded by hldsupdatetool.
+> This project works only with Sven Co-op 5.26.
 
 #### Downloading SvenDS via steamcmd
 
@@ -41,7 +30,7 @@ app_update 276060 validate
 
 ## Downloads
 * [Release builds](https://github.com/autisoid/ReHLDS/releases)
-* ~~[Dev builds](https://github.com/rehlds/ReHLDS/actions/workflows/build.yml)~~
+* [Dev builds](https://github.com/autisoid/ReHLDS_Sven/actions)
 
 ReHLDS binaries require `SSE`, `SSE2` and `SSE3` instruction sets to run and can benefit from `SSE4.1` and `SSE4.2`
 
