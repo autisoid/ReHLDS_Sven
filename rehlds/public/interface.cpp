@@ -234,3 +234,13 @@ void *InitializeInterface(char const *interfaceName, CreateInterfaceFn *factoryL
 
 	return nullptr;
 }
+
+#ifdef REHLDS_SVEN
+// Purpose: Returns a module handle by its name.
+// Input  : pModuleName - module name
+// Output : the module handle or NULL in case of an error
+CSysModule* Sys_GetModuleHandle( const char* pModuleName )
+{
+	return reinterpret_cast<CSysModule*>(GetModuleHandle(pModuleName));
+}
+#endif //REHLDS_SVEN

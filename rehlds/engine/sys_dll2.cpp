@@ -664,17 +664,31 @@ void ClearIOStates(void)
 #endif // SWDS
 }
 
-bool Sys_LoadServerDLL(const char* modulename)
+/*
+====================
+Sys_LoadServerDLL
+
+Attempts to initialize Svengine-exclusive extensions to the Game DLL (CServerDLL klass i.e. the interface)
+====================
+*/
+bool Sys_LoadServerDLL( const char* modulename )
 {
 	CSysModule* pModule;
 	CreateInterfaceFn pfnFactory;
 	
+#ifdef REHLDS_SVEN
+	g_pServerModule = pModule = Sys_GetModuleHandle(modulename);
+#else //!REHLDS_SVEN
 	g_pServerModule = pModule = Sys_LoadModule(modulename);
+#endif //REHLDS_SVEN
 
 	if (!pModule)
 		return false;
-
+	
 	pfnFactory = Sys_GetFactory(pModule);
+
+	if (!pfnFactory)
+		pfnFactory = (CreateInterfaceFn)GetDispatch(CREATEINTERFACE_PROCNAME);
 
 	if (!pfnFactory)
 		return false;
@@ -684,15 +698,34 @@ bool Sys_LoadServerDLL(const char* modulename)
 	return g_pServerDLL != NULL;
 }
 
-void Sys_InitServerDLL(void)
+/*
+====================
+Sys_InitServerDLL
+
+Calls CServerDLL#Init inside the Game DLL, so it knows we're "running" Svengine
+====================
+*/
+void Sys_InitServerDLL( void )
 {
 	if (g_pServerDLL)
 	{
 		g_pServerDLL->Init(Sys_GetFactoryThis());
+		Con_DPrintf("%s: called CServerDLL#Init\n", __func__);
+	}
+	else
+	{
+		Con_DPrintf("%s: no g_pServerDLL!!!\n", __func__);
 	}
 }
 
-void Sys_UnloadServerDLL(void)
+/*
+====================
+Sys_UnloadServerDLL
+
+Closes the last known HANDLE to the Game DLL, so we can fully restart the engine
+====================
+*/
+void Sys_UnloadServerDLL( void )
 {
 	if (g_pServerModule)
 	{

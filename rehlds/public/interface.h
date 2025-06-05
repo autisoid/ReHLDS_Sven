@@ -121,3 +121,7 @@ extern CSysModule *Sys_LoadModule(const char *pModuleName);
 extern void Sys_UnloadModule(CSysModule *pModule);
 extern CreateInterfaceFn Sys_GetFactory(CSysModule *pModule);
 extern void *InitializeInterface(char const *interfaceName, CreateInterfaceFn *factoryList, int numFactories);
+
+#ifdef REHLDS_SVEN
+extern CSysModule* Sys_GetModuleHandle( const char* pModuleName );
+#endif 

@@ -869,9 +869,13 @@ void DLL_SetModKey(modinfo_t *pinfo, char *pkey, char *pvalue)
 
 }
 
-//sys_dll2.cpp
-extern bool Sys_LoadServerDLL(const char* modulename);
-extern void Sys_InitServerDLL(void);
+/*
+====================
+sys_dll2.cpp
+====================
+*/
+extern bool Sys_LoadServerDLL( const char* modulename );
+extern void Sys_InitServerDLL( void );
 
 void LoadEntityDLLs(const char* szBaseDir)
 {
@@ -1038,9 +1042,16 @@ void LoadEntityDLLs(const char* szBaseDir)
 		}
 	}
 
-	if (Sys_LoadServerDLL(szDllFilename)) {
+	if (Sys_LoadServerDLL(szDllFilename))
+	{
+		Con_DPrintf("%s: Game DLL loaded, now trying to initialize Svengine extensions...\n", __func__);
 		g_fSvengineExtensions = TRUE;
 		Sys_InitServerDLL();
+	}
+	else
+	{
+		g_fSvengineExtensions = FALSE;
+		Con_DPrintf("%s: Game DLL loaded, but no Svengine extensions!!!\n", __func__);
 	}
 
 	Con_DPrintf("Dll loaded for %s %s\n", gmodinfo.bIsMod ? "mod" : "game", gEntityInterface.pfnGetGameDescription());
@@ -1127,6 +1138,13 @@ IgnoreThisDLL:
 	}
 }
 
+/*
+====================
+sys_dll2.cpp
+====================
+*/
+extern void Sys_UnloadServerDLL( void );
+
 void ReleaseEntityDlls(void)
 {
 	extensiondll_t *pextdll;
@@ -1161,6 +1179,7 @@ void ReleaseEntityDlls(void)
 		}
 		pextdll++;
 	}
+	Sys_UnloadServerDLL();
 	g_psvs.dll_initialized = FALSE;
 }
 
