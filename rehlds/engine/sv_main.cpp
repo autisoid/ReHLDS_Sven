@@ -6286,6 +6286,11 @@ void SV_ServerShutdown(const char* _MapName)
 	}
 }
 
+// Move me somewhere please
+#if defined(REHLDS_SVEN) && (defined(linux) || defined(LINUX) || defined(__linux__) || defined(_LINUX))
+#include <sys/stat.h>
+#endif //defined(REHLDS_SVEN) and (defined(linux) or defined(LINUX) or defined(__linux__) or defined(_LINUX))
+
 int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 {
 	client_t *cl;
@@ -6293,6 +6298,10 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 	int i;
 	char *pszhost;
 	char oldname[64];
+#if defined(REHLDS_SVEN) && (defined(linux) || defined(LINUX) || defined(__linux__) || defined(_LINUX))
+	char fsbuffer[MAX_QPATH];
+	struct stat st;
+#endif //defined(REHLDS_SVEN) and (defined(linux) or defined(LINUX) or defined(__linux__) or defined(_LINUX))
 
 	if (g_psv.active)
 	{
@@ -6337,6 +6346,21 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 		Con_DPrintf("Spawn Server %s: [%s]\n", server, startspot);
 	else
 		Con_DPrintf("Spawn Server %s\n", server);
+
+#if defined(REHLDS_SVEN) && (defined(linux) || defined(LINUX) || defined(__linux__) || defined(_LINUX))
+	Q_snprintf(fsbuffer, sizeof(fsbuffer), "sound/%s/%s.txt", server, server);
+	if (stat(fsbuffer, &st) != 0)
+	{
+		COM_CreatePath(fsbuffer);
+	}
+	fsbuffer[0] = '\0';
+
+	Q_snprintf(fsbuffer, sizeof(fsbuffer), "models/%s/%s.txt", server, server);
+	if (stat(fsbuffer, &st) != 0)
+	{
+		COM_CreatePath(fsbuffer);
+	}
+#endif //defined(REHLDS_SVEN) and (defined(linux) or defined(LINUX) or defined(__linux__) or defined(_LINUX))
 
 	g_LastScreenUpdateTime = 0.0f;
 	g_psvs.spawncount = ++gHostSpawnCount;
