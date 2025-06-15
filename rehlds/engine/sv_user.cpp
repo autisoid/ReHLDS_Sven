@@ -60,6 +60,13 @@ cvar_t sv_unlagsamples = { "sv_unlagsamples", "1", 0, 0.0f, NULL };
 cvar_t mp_consistency = { "mp_consistency", "1", FCVAR_SERVER, 0.0f, NULL };
 cvar_t sv_voiceenable = { "sv_voiceenable", "1", FCVAR_SERVER | FCVAR_ARCHIVE, 0.0f, NULL };
 
+#ifdef REHLDS_FIXES
+// 24 seems to be the best value - no false positives (Been testing for five minutes at 500 and 20 fps)
+// 16 may seem better for security, but it involves false positives sometimes (when the client alt-tabs from the game)
+// still, it prevents fastcrowbar and other burst speedhacks so far.
+cvar_t sv_rehlds_maxusrcmdprocessticks = { "sv_rehlds_maxusrcmdprocessticks", "24", FCVAR_SERVER | FCVAR_ARCHIVE, 0.0f, NULL };
+#endif //REHLDS_FIXES
+
 clc_func_t sv_clcfuncs[] = {
 	{ clc_bad,             "clc_bad",             nullptr                      },
 	{ clc_nop,             "clc_nop",             nullptr                      },
@@ -770,6 +777,23 @@ void SV_RunCmd(usercmd_t *ucmd, int random_seed)
 		return;
 	}
 
+#ifdef REHLDS_FIXES
+	if (sv_rehlds_maxusrcmdprocessticks.value > 0.0f)
+	{
+		if (host_client->m_nProcessedUsrcmdsThisVeryTick > (unsigned int)(int)sv_rehlds_maxusrcmdprocessticks.value)
+		{
+			if (host_client->m_flLastUsrcmdsWarningPrintTime + 1.0f < realtime)
+			{
+				Con_Printf("%s: client \"%s\" is going over sv_rehlds_maxusrcmdprocessticks!\n", __func__, host_client->name);
+				host_client->m_flLastUsrcmdsWarningPrintTime = realtime;
+			}
+
+			return;
+		}
+
+		host_client->m_nProcessedUsrcmdsThisVeryTick++;
+	}
+#endif //REHLDS_FIXES
 
 	host_client->ignorecmdtime = 0;
 	if (cmd.msec > 50)

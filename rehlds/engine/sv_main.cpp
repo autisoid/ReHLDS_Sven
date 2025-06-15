@@ -8097,6 +8097,20 @@ void SV_CheckCmdTimes(void)
 	}
 }
 
+#ifdef REHLDS_FIXES
+void SV_ResetProcessedUsrcmdTicks( void )
+{
+	for (int i = g_psvs.maxclients - 1; i >= 0; i--)
+	{
+		client_t* cl = &g_psvs.clients[i];
+		if (!cl->connected || !cl->active)
+			continue;
+
+		cl->m_nProcessedUsrcmdsThisVeryTick = 0;
+	}
+}
+#endif //REHLDS_FIXES
+
 void SV_CheckForRcon(void)
 {
 	if (g_psv.active || g_pcls.state != ca_dedicated || giActive == DLL_CLOSE || !host_initialized)
@@ -8165,6 +8179,9 @@ void EXT_FUNC SV_Frame_Internal()
 	gGlobalVariables.frametime = host_frametime;
 	g_psv.oldtime = g_psv.time;
 	SV_CheckCmdTimes();
+#ifdef REHLDS_FIXES
+	SV_ResetProcessedUsrcmdTicks();
+#endif //REHLDS_FIXES
 	SV_ReadPackets();
 	if (SV_IsSimulating())
 	{
@@ -8408,6 +8425,7 @@ void SV_Init(void)
 	Cvar_RegisterVariable(&sv_rehlds_local_gametime);
 	Cvar_RegisterVariable(&sv_rehlds_send_mapcycle);
 	Cvar_RegisterVariable(&sv_rehlds_maxclients_from_single_ip);
+	Cvar_RegisterVariable(&sv_rehlds_maxusrcmdprocessticks);
 
 #ifdef REHLDS_SVEN
 	Cvar_RegisterVariable(&sv_rehlds_sven_block_game_bans);
