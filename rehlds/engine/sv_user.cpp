@@ -61,10 +61,12 @@ cvar_t mp_consistency = { "mp_consistency", "1", FCVAR_SERVER, 0.0f, NULL };
 cvar_t sv_voiceenable = { "sv_voiceenable", "1", FCVAR_SERVER | FCVAR_ARCHIVE, 0.0f, NULL };
 
 #ifdef REHLDS_FIXES
+cvar_t sv_rehlds_force_allow_lagcompensation = { "sv_rehlds_force_allow_lagcompensation", "0", FCVAR_SERVER | FCVAR_ARCHIVE, 0.0f, NULL };
+
 // 24 seems to be the best value - no false positives (Been testing for five minutes at 500 and 20 fps)
 // 16 may seem better for security, but it involves false positives sometimes (when the client alt-tabs from the game)
 // still, it prevents fastcrowbar and other burst speedhacks so far.
-cvar_t sv_rehlds_maxusrcmdprocessticks = { "sv_rehlds_maxusrcmdprocessticks", "24", FCVAR_SERVER | FCVAR_ARCHIVE, 0.0f, NULL };
+cvar_t sv_rehlds_maxusrcmdprocessticks = { "sv_rehlds_maxusrcmdprocessticks", "24", FCVAR_SERVER | FCVAR_ARCHIVE, 24.0f, NULL };
 #endif //REHLDS_FIXES
 
 clc_func_t sv_clcfuncs[] = {
@@ -1246,7 +1248,11 @@ void SV_SetupMove(client_t *_host_client)
 
 	Q_memset(truepositions, 0, sizeof(truepositions));
 	nofind = 1;
-	if (!gEntityInterface.pfnAllowLagCompensation())
+	if (!gEntityInterface.pfnAllowLagCompensation()
+#ifdef REHLDS_FIXES
+		&& sv_rehlds_force_allow_lagcompensation.value == 0.0f
+#endif //REHLDS_FIXES
+		)
 		return;
 
 	if (sv_unlag.value == 0.0f || !_host_client->lw || !_host_client->lc)
@@ -1455,7 +1461,11 @@ void SV_RestoreMove(client_t *_host_client)
 		return;
 	}
 
-	if (!gEntityInterface.pfnAllowLagCompensation())
+	if (!gEntityInterface.pfnAllowLagCompensation()
+#ifdef REHLDS_FIXES
+		&& sv_rehlds_force_allow_lagcompensation.value == 0.0f
+#endif //REHLDS_FIXES
+		)
 		return;
 
 	if (g_psvs.maxclients <= 1 || sv_unlag.value == 0.0)

@@ -380,6 +380,7 @@ extern cvar_t sv_rehlds_local_gametime;
 extern cvar_t sv_rehlds_send_mapcycle;
 extern cvar_t sv_usercmd_custom_random_seed;
 extern cvar_t sv_rehlds_maxusrcmdprocessticks;
+extern cvar_t sv_rehlds_force_allow_lagcompensation;
 #ifdef REHLDS_SVEN
 // xWhitey: You see, there's a large problem with the Sven Co-op developers team: they're freaking bastards.
 // I was doing crazy shit like crashing and exploding servers hoping that they'll do at least something to prevent me
