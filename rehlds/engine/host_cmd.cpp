@@ -18,7 +18,7 @@
 *    link the code of this program with the Half-Life Game Engine ("HL
 *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
 *    L.L.C ("Valve").  You must obey the GNU General Public License in all
-*    respects for all of the code used other than the HL Engine and MODs
+*    respects for all of the code used other than the HL Engine and MODsSen
 *    from Valve.  If you modify this file, you may extend this exception
 *    to your version of the file, but you are not obligated to do so.  If
 *    you do not wish to do so, delete this exception statement from your
@@ -1100,7 +1100,11 @@ void Host_Changelevel_f(void)
 	SCR_BeginLoadingPlaque(FALSE);
 	S_StopAllSounds(1);
 	SV_InactivateClients();
+#ifdef REHLDS_SVEN
 	SV_ServerShutdown(_level);
+#else //!REHLDS_SVEN
+	SV_ServerShutdown();
+#endif //REHLDS_SVEN
 	SV_SpawnServer(FALSE, _level, startspot);
 	SV_LoadEntities();
 	SV_ActivateServer(1);
@@ -1156,7 +1160,11 @@ void Host_Restart_f(void)
 	Q_strncpy(name, g_psv.name, sizeof(name) - 1);
 	name[sizeof(name) - 1] = 0;
 
+#ifdef REHLDS_SVEN
 	SV_ServerShutdown(name);
+#else //!REHLDS_SVEN
+	SV_ServerShutdown();
+#endif //REHLDS_SVEN
 	SV_SpawnServer(FALSE, name, NULL);
 	SV_LoadEntities();
 	SV_ActivateServer(1);
@@ -1171,7 +1179,11 @@ void Host_Reload_f(void)
 
 	Host_ClearGameState();
 	SV_InactivateClients();
+#ifdef REHLDS_SVEN
 	SV_ServerShutdown(gHostMap.string);
+#else //!REHLDS_SVEN
+	SV_ServerShutdown();
+#endif //REHLDS_SVEN
 
 	pSaveName = Host_FindRecentSave(name);
 	if (!pSaveName || !Host_Load(pSaveName))
@@ -2437,7 +2449,11 @@ void Host_Changelevel2_f(void)
 	oldlevel[sizeof(oldlevel) - 1] = 0;
 
 	pSaveData = SaveGamestate();
+#ifdef REHLDS_SVEN
 	SV_ServerShutdown(level);
+#else //!REHLDS_SVEN
+	SV_ServerShutdown();
+#endif //REHLDS_SVEN
 	FS_LogLevelLoadStarted(level);
 
 	if (!SV_SpawnServer(FALSE, level, startspot))

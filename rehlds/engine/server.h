@@ -83,7 +83,11 @@ enum
 	MSG_FL_ONE			= BIT(7),	// Send to single client
 };
 
+#ifdef REHLDS_SVEN
 const int RESOURCE_INDEX_BITS = 16;
+#else //!REHLDS_SVEN
+const int RESOURCE_INDEX_BITS = 12;
+#endif //REHLDS_SVEN
 
 #ifdef REHLDS_FIXES
 const int RESOURCE_MAX_COUNT = BIT(RESOURCE_INDEX_BITS);
@@ -174,7 +178,11 @@ typedef struct client_frame_s
 	double senttime;
 	float ping_time;
 	clientdata_t clientdata;
+#ifdef REHLDS_SVEN
 	weapon_data_t weapondata[256];
+#else //!REHLDS_SVEN
+	weapon_data_t weapondata[64];
+#endif //REHLDS_SVEN
 	packet_entities_t entities;
 } client_frame_t;
 
@@ -565,10 +573,14 @@ void SV_EmitEvents(client_t *cl, packet_entities_t *pack, sizebuf_t *msg);
 void SV_EmitEvents_internal(client_t *cl, packet_entities_t *pack, sizebuf_t *msg);
 void SV_AddToFatPVS(vec_t *org, mnode_t *node);
 unsigned char *SV_FatPVS(float *org);
+#ifdef REHLDS_SVEN
 unsigned char *SV_AddPositionToFatPVS(float *org);
+#endif //REHLDS_SVEN
 void SV_AddToFatPAS(vec_t *org, mnode_t *node);
-unsigned char *SV_FatPAS(float *org);
-unsigned char *SV_AddPositionToFatPAS(float *org);
+unsigned char *SV_FatPAS(float* org);
+#ifdef REHLDS_SVEN
+unsigned char *SV_AddPositionToFatPAS(float* org);
+#endif //REHLDS_SVEN
 int SV_PointLeafnum(vec_t *p);
 void TRACE_DELTA(char *fmt, ...);
 void SV_SetCallback(int num, qboolean remove, qboolean custom, int *numbase, qboolean full, int offset);
@@ -610,7 +622,11 @@ NOXREF void SV_ReconnectAllClients(void);
 void SetCStrikeFlags(void);
 void SV_ActivateServer(int runPhysics);
 void SV_ActivateServer_internal(int runPhysics);
+#ifdef REHLDS_SVEN
 void SV_ServerShutdown(const char* _MapName);
+#else //!REHLDS_SVEN
+void SV_ServerShutdown(void);
+#endif //REHLDS_SVEN
 int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot);
 void SV_LoadEntities(void);
 void SV_ClearEntities(void);
@@ -658,7 +674,9 @@ int GetGameAppID(void);
 qboolean IsGameSubscribed(const char *gameName);
 NOXREF qboolean BIsValveGame(void);
 
+#ifdef REHLDS_SVEN
 // serverdll.cpp
 void SV_EndFrame( void );
 void SV_NotifyClients( const char* _Text );
 void SV_OnLevelChange(const char* _MapName);
+#endif //REHLDS_SVEN

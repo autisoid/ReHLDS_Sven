@@ -1535,7 +1535,9 @@ void SV_Physics()
 	if (gGlobalVariables.force_retouch != 0.0f)
 		gGlobalVariables.force_retouch = gGlobalVariables.force_retouch - 1.0f;
 
+#ifdef REHLDS_SVEN
 	SV_EndFrame();
+#endif //REHLDS_SVEN
 }
 
 trace_t SV_Trace_Toss(edict_t *ent, edict_t *ignore)

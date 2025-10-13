@@ -28,6 +28,11 @@
 
 #include "precompiled.h"
 
+// Move me somewhere please
+#if defined(REHLDS_SVEN) && (defined(linux) || defined(LINUX) || defined(__linux__) || defined(_LINUX))
+#include <sys/stat.h>
+#endif //defined(REHLDS_SVEN) and (defined(linux) or defined(LINUX) or defined(__linux__) or defined(_LINUX))
+
 typedef struct full_packet_entities_s
 {
 	int num_entities;
@@ -1108,7 +1113,13 @@ void SV_SendServerinfo_internal(sizebuf_t *msg, client_t *client)
 	if (developer.value != 0.0f || g_psvs.maxclients > 1)
 	{
 		MSG_WriteByte(msg, svc_print);
+#ifndef REHLDS_SVEN
 		Q_snprintf(message, ARRAYSIZE(message), "%c\nBUILD %d SERVER (%i CRC)\nServer # %i\n", 2, build_number(), 0, g_psvs.spawncount);
+#else //REHLDS_SVEN
+		// Send fake svends greeting.
+		// xWhitey: I decided to add "5970" to the build number just for fun, really. No real purpose.
+		Q_snprintf(message, ARRAYSIZE(message), "\n%s\nServer Engine: %s (build %d%s)\nServer Number: %i\n\n", gEntityInterface.pfnGetGameDescription(), gpszVersionString, build_number() + 5970, "", g_psvs.spawncount);
+#endif //REHLDS_SVEN
 		MSG_WriteString(msg, message);
 	}
 
@@ -1119,7 +1130,9 @@ void SV_SendServerinfo_internal(sizebuf_t *msg, client_t *client)
 	int playernum = NUM_FOR_EDICT(client->edict) - 1;
 	int mungebuffer = g_psv.worldmapCRC;
 
-	//COM_Munge3((byte *)&mungebuffer, sizeof(mungebuffer), (-1 - playernum) & 0xFF);
+#ifndef REHLDS_SVEN
+	COM_Munge3((byte *)&mungebuffer, sizeof(mungebuffer), (-1 - playernum) & 0xFF);
+#endif //!REHLDS_SVEN
 	MSG_WriteLong(msg, mungebuffer);
 
 	MSG_WriteBuf(msg, sizeof(g_psv.clientdllmd5), g_psv.clientdllmd5);
@@ -1243,7 +1256,11 @@ void EXT_FUNC SV_SendResources_internal(sizebuf_t *msg)
 	{
 		MSG_WriteBits(r->type, 4);
 		MSG_WriteBitString(r->szFileName);
+#ifndef REHLDS_SVEN
+		MSG_WriteBits(r->nIndex, RESOURCE_INDEX_BITS); // xWhitey: This is wrong. In the original game, this line looks different.
+#else //!REHLDS_SVEN
 		MSG_WriteBits(r->nIndex, 12);
+#endif //!REHLDS_SVEN
 		MSG_WriteBits(r->nDownloadSize, 24);
 		MSG_WriteBits(r->ucFlags & (RES_WASMISSING | RES_FATALIFMISSING), 3);
 
@@ -1323,7 +1340,11 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 	else
 	{
 		MSG_WriteBits(1, 1);
+#ifdef REHLDS_SVEN
 		MSG_WriteBits(host_client->delta_sequence, 16);
+#else //!REHLDS_SVEN
+		MSG_WriteBits(host_client->delta_sequence, 8);
+#endif //REHLDS_SVEN
 		from = &host_client->frames[bits].clientdata;
 	}
 
@@ -1337,7 +1358,11 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 		weapon_data_t *fdata = NULL;
 		weapon_data_t *tdata = frame->weapondata;
 
+#ifdef REHLDS_SVEN
 		for (int i = 0; i < 256; i++, tdata++)
+#else //!REHLDS_SVEN
+		for (int i = 0; i < 64; i++, tdata++)
+#endif //REHLDS_SVEN
 		{
 #ifdef REHLDS_FIXES
 			// So, HL and CS games send absolute gametime in these vars, DMC and Ricochet games don't send absolute gametime
@@ -1371,7 +1396,11 @@ void SV_WriteClientdataToMessage(client_t *client, sizebuf_t *msg)
 #endif // !REHLDS_SVEN
 			{
 				MSG_WriteBits(1, 1);
+#ifdef REHLDS_SVEN
 				MSG_WriteBits(i, 8);
+#else //!REHLDS_SVEN
+				MSG_WriteBits(i, 6);
+#endif //REHLDS_SVEN
 
 #if (defined (REHLDS_OPT_PEDANTIC) || defined (REHLDS_FIXES)) && !defined(REHLDS_SVEN)
 				// all calculations are already done
@@ -1554,6 +1583,9 @@ void SV_New_f(void)
 
 	Netchan_Clear(&host_client->netchan);
 
+	// TODO: xWhitey: sven uses svc_foundsecret (28) as the "events" message (like svencoop_event_april)
+	// Maybe implement this?
+
 	SV_SendServerinfo(&msg, host_client);
 
 	if (sv_gpUserMsgs)
@@ -1606,7 +1638,11 @@ void SV_New_f(void)
 
 void SV_SendRes_f(void)
 {
+#ifdef REHLDS_SVEN
 	unsigned char data[NET_MAX_PAYLOAD * 4];
+#else //!REHLDS_SVEN
+	unsigned char data[NET_MAX_PAYLOAD];
+#endif //REHLDS_SVEN
 	sizebuf_t msg;
 
 	Q_memset(&msg, 0, sizeof(msg));
@@ -1661,7 +1697,9 @@ void EXT_FUNC SV_Spawn_f_internal(void)
 
 	host_client->crcValue = Q_atoi(Cmd_Argv(2));
 
-	//COM_UnMunge2((unsigned char *)&host_client->crcValue, 4, (-1 - g_psvs.spawncount) & 0xFF);
+#ifndef REHLDS_SVEN
+	COM_UnMunge2((unsigned char *)&host_client->crcValue, 4, (-1 - g_psvs.spawncount) & 0xFF);
+#endif //!REHLDS_SVEN
 
 	if (cmd_source == src_command)
 	{
@@ -4235,7 +4273,11 @@ void SV_EmitEvents_internal(client_t *cl, packet_entities_t *pack, sizebuf_t *ms
 			if (info->packet_index != -1)
 			{
 				MSG_WriteBits(1, 1);
-				MSG_WriteBits(info->packet_index, 10); //Sven Co-op change
+#ifndef REHLDS_SVEN
+				MSG_WriteBits(info->packet_index, 11);
+#else //!REHLDS_SVEN
+				MSG_WriteBits(info->packet_index, 10); // xWhitey: This is a change in Sven Co-op. Why did they take one bit LOL?
+#endif //REHLDS_SVEN
 				if (Q_memcmp(&nullargs, &info->args, sizeof(event_args_t)))
 				{
 					MSG_WriteBits(1, 1);
@@ -4325,12 +4367,14 @@ unsigned char* EXT_FUNC SV_FatPVS(float *org)
 	return fatpvs;
 }
 
+#ifdef REHLDS_SVEN
 //Sven-specific function
 unsigned char* SV_AddPositionToFatPVS(float* org)
 {
 	SV_AddToFatPVS(org, g_psv.worldmodel->nodes);
 	return (unsigned char*) &fatpvs;
 }
+#endif //REHLDS_SVEN
 
 void SV_AddToFatPAS(vec_t *org, mnode_t *node)
 {
@@ -4392,12 +4436,14 @@ unsigned char* EXT_FUNC SV_FatPAS(float *org)
 	return fatpas;
 }
 
+#ifdef REHLDS_SVEN
 //Sven-specific function
 unsigned char* SV_AddPositionToFatPAS(float* org)
 {
 	SV_AddToFatPAS(org, g_psv.worldmodel->nodes);
 	return (unsigned char*)&fatpas;
 }
+#endif //REHLDS_SVEN
 
 int SV_PointLeafnum(vec_t *p)
 {
@@ -4455,7 +4501,11 @@ void SV_WriteDeltaHeader(int num, qboolean remove, qboolean custom, int *numbase
 		if (delta <= 0 || delta > 63)
 		{
 			MSG_WriteBits(1u, 1);
+#ifdef REHLDS_SVEN
 			MSG_WriteBits(num, 13);
+#else //!REHLDS_SVEN
+			MSG_WriteBits(num, 11);
+#endif //REHLDS_SVEN
 		}
 		else
 		{
@@ -4596,9 +4646,13 @@ int SV_CreatePacketEntities_internal(sv_delta_t type, client_t *client, packet_e
 
 		MSG_WriteByte(msg, svc_deltapacketentities);    // This is a delta
 		MSG_WriteShort(msg, to->num_entities);          // This is how many ents are in the new packet
+#ifdef REHLDS_SVEN
 		MSG_StartBitWriting(msg);
 		MSG_WriteBits(client->delta_sequence, 16);     // This is the sequence # that we are updating from
 		MSG_EndBitWriting(msg);
+#else //!REHLDS_SVEN
+		MSG_WriteByte(msg, client->delta_sequence);     // This is the sequence # that we are updating from
+#endif //REHLDS_SVEN
 	}
 	else
 	{
@@ -5929,7 +5983,11 @@ void SV_CreateBaseline(void)
 		svent = &g_psv.edicts[entnum];
 		if (!svent->free && (g_psvs.maxclients >= entnum || svent->v.modelindex))
 		{
+#ifdef REHLDS_SVEN
 			MSG_WriteBits(entnum, 13);
+#else //!REHLDS_SVEN
+			MSG_WriteBits(entnum, 11);
+#endif //REHLDS_SVEN
 			MSG_WriteBits(g_psv.baselines[entnum].entityType, 2);
 			custom = ~g_psv.baselines[entnum].entityType & ENTITY_NORMAL;
 			if (custom)
@@ -6048,10 +6106,12 @@ void SetCStrikeFlags(void)
 		{
 			g_eGameType = GT_TFC;
 		}
+#ifdef REHLDS_SVEN
 		else if (!Q_stricmp(com_gamedir, "svencoop"))
 		{
 			g_eGameType = GT_HL1;
 		}
+#endif //REHLDS_SVEN
 	}
 }
 
@@ -6172,6 +6232,9 @@ void EXT_FUNC SV_ActivateServer_internal(int runPhysics)
 	sizebuf_t msg;
 	client_t *cl;
 	UserMsg *pTemp;
+#ifdef REHLDS_SVEN
+	UserMsg* pCurrent;
+#endif //REHLDS_SVEN
 	char szCommand[256];
 
 	Q_memset(&msg, 0, sizeof(sizebuf_t));
@@ -6189,6 +6252,23 @@ void EXT_FUNC SV_ActivateServer_internal(int runPhysics)
 	ContinueLoadingProgressBar("Server", 8, 0.0f);
 	gEntityInterface.pfnServerActivate(g_psv.edicts, g_psv.num_edicts, g_psvs.maxclients);
 	Steam_Activate();
+#ifdef REHLDS_SVEN
+	if (sv_gpNewUserMsgs)
+	{
+		pTemp = sv_gpUserMsgs;
+		if (sv_gpUserMsgs)
+		{
+			for (pCurrent = sv_gpUserMsgs->next; pCurrent != NULL; pCurrent = pCurrent->next)
+				pTemp = pCurrent;
+			pTemp->next = sv_gpNewUserMsgs;
+		}
+		else
+		{
+			sv_gpUserMsgs = sv_gpNewUserMsgs;
+		}
+		sv_gpNewUserMsgs = NULL;
+	}
+#endif //REHLDS_SVEN
 	ContinueLoadingProgressBar("Server", 9, 0.0f);
 #ifdef REHLDS_FIXES
 	// Precache after all models and sounds is precached, because we use PrecacheGeneric, which checks is that resource already precached as model or sound
@@ -6273,10 +6353,16 @@ void EXT_FUNC SV_ActivateServer_internal(int runPhysics)
 #endif
 }
 
+#ifdef REHLDS_SVEN
 void SV_ServerShutdown(const char* _MapName)
+#else //!REHLDS_SVEN
+void SV_ServerShutdown(void)
+#endif //REHLDS_SVEN
 {
 	Steam_NotifyOfLevelChange();
+#ifdef REHLDS_SVEN
 	SV_OnLevelChange(_MapName);
+#endif //REHLDS_SVEN
 	gGlobalVariables.time = g_psv.time;
 
 	if (g_psvs.dll_initialized)
@@ -6285,11 +6371,6 @@ void SV_ServerShutdown(const char* _MapName)
 			gEntityInterface.pfnServerDeactivate();
 	}
 }
-
-// Move me somewhere please
-#if defined(REHLDS_SVEN) && (defined(linux) || defined(LINUX) || defined(__linux__) || defined(_LINUX))
-#include <sys/stat.h>
-#endif //defined(REHLDS_SVEN) and (defined(linux) or defined(LINUX) or defined(__linux__) or defined(_LINUX))
 
 int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 {
@@ -6561,6 +6642,7 @@ int SV_SpawnServer(qboolean bIsDemo, char *server, char *startspot)
 	// because if the submodels aren't precached, the dedicated server will throw a Sys_Error
 	// because of one of my plugins.
 	// See https://github.com/rehlds/ReHLDS/commit/19c22d75380484150a2876eeba9ec35beaaf89d6#diff-110ffc3aa214a3b4da3e320104b8a776b7329bfb8a61d8c8349cfaa712e800f7R6060 for more info.
+	// 10/12/2025 (mm/dd/yyyy) -- more info -- this actually restores the original behaviour which some map scripts may rely on so yeah.
 	for (i = 1; i < g_psv.worldmodel->numsubmodels; i++)
 	{
 		g_psv.model_precache[i + 1] = localmodels[i];

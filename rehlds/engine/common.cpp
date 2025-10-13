@@ -830,7 +830,11 @@ float MSG_ReadBitCoord(void)
 
 		if (intval)
 		{
+#ifdef REHLDS_SVEN
 			intval = MSG_ReadBits(24);
+#else //!REHLDS_SVEN
+			intval = MSG_ReadBits(12);
+#endif //REHLDS_SVEN
 		}
 
 		if (fractval)
@@ -862,7 +866,11 @@ void MSG_WriteBitCoord(const float f)
 	{
 		MSG_WriteOneBit(signbit);
 		if (intval)
+#ifdef REHLDS_SVEN
 			MSG_WriteBits(intval, 24);
+#else //!REHLDS_SVEN
+			MSG_WriteBits(intval, 12);
+#endif //REHLDS_SVEN
 		if (fractval)
 			MSG_WriteBits(fractval, 3);
 	}
@@ -902,12 +910,23 @@ void MSG_WriteBitVec3Coord(const vec3_t fa)
 
 float MSG_ReadCoord(void)
 {
-	return (float)(MSG_ReadLong() * (1.0 / 8));
+	return (float)(
+#ifdef REHLDS_SVEN
+		MSG_ReadLong()
+#else //!REHLDS_SVEN
+		MSG_ReadShort()
+#endif //REHLDS_SVEN
+		* (1.0 / 8));
 }
 
 void MSG_WriteCoord(sizebuf_t *sb, const float f)
 {
-	MSG_WriteLong(sb, (int)(f * 8.0));
+#ifdef REHLDS_SVEN
+	MSG_WriteLong
+#else //!REHLDS_SVEN
+	MSG_WriteShort
+#endif //REHLDS_SVEN
+	(sb, (int)(f * 8.0));
 }
 
 void MSG_ReadVec3Coord(sizebuf_t *sb, vec3_t fa)

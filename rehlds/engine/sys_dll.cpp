@@ -98,7 +98,9 @@ int g_FPUCW_Mask_Prec_64Bit_2 = 0;
 int g_FPUCW_Mask_Round_Trunc = 0;
 int g_FPUCW_Mask_Round_Up = 0;
 
+#ifdef REHLDS_SVEN
 BOOL g_fSvengineExtensions = FALSE;
+#endif //REHLDS_SVEN
 
 FileFindHandle_t g_hfind = FILESYSTEM_INVALID_FIND_HANDLE;
 
@@ -864,7 +866,11 @@ void DLL_SetModKey(modinfo_t *pinfo, char *pkey, char *pvalue)
 	// Let's just do only those things which are necessary to get ReHLDS work properly with Sven Co-op.
 	else if (!Q_stricmp(pkey, "ignore_event_files"))
 	{
-		pinfo->bIgnoreEventFiles = 1;
+		pinfo->bIgnoreEventFiles = Q_atoi(pvalue) != 0;
+	}
+	else if (!Q_stricmp(pkey, "event_system"))
+	{
+		pinfo->fEventSystem = Q_atoi(pvalue) != 0;
 	}
 
 }
@@ -882,10 +888,10 @@ void LoadEntityDLLs(const char* szBaseDir)
 	FileHandle_t hLibListFile;
 	unsigned int nFileSize;
 	unsigned int nFileSize2;
-	char* pszInputStream;
+	char *pszInputStream;
 	int nBytesRead;
-	char* pStreamPos;
-	const char* findfn;
+	char *pStreamPos;
+	const char *findfn;
 	NEW_DLL_FUNCTIONS_FN pNewAPI;
 	APIFUNCTION2 pfnGetAPI2;
 	APIFUNCTION pfnGetAPI;
@@ -903,7 +909,10 @@ void LoadEntityDLLs(const char* szBaseDir)
 
 	Q_strncpy(szGameDir, com_gamedir, sizeof(szGameDir) - 1);
 	if (Q_stricmp(szGameDir, "svencoop"))
+	{
+		gmodinfo.fEventSystem = 1; // force assume event system is enabled
 		gmodinfo.bIsMod = 1;
+	}
 
 	Q_snprintf(szDllListFile, sizeof(szDllListFile), "%s", "liblist.gam");
 	hLibListFile = FS_Open(szDllListFile, "rb");
@@ -914,7 +923,7 @@ void LoadEntityDLLs(const char* szBaseDir)
 		if (!nFileSize || (signed int)nFileSize > 262144)
 			Sys_Error("%s: Game listing file size is bogus [%s: size %i]", __func__, "liblist.gam", nFileSize);
 
-		pszInputStream = (char*)Mem_Malloc(nFileSize + 1);
+		pszInputStream = (char *)Mem_Malloc(nFileSize + 1);
 		if (!pszInputStream)
 			Sys_Error("%s: Could not allocate space for game listing file of %i bytes", __func__, nFileSize2 + 1);
 
@@ -953,7 +962,7 @@ void LoadEntityDLLs(const char* szBaseDir)
 					szValue[sizeof(szValue) - 1] = 0;
 				}
 #ifdef REHLDS_FIXES
-				char* value_extension = Q_strrchr(szValue, '.');
+				char *value_extension = Q_strrchr(szValue, '.');
 #ifdef _WIN32
 				if (value_extension && Q_strcmp(value_extension, ".dll") == 0)
 #else // _WIN32
@@ -1042,6 +1051,7 @@ void LoadEntityDLLs(const char* szBaseDir)
 		}
 	}
 
+#ifdef REHLDS_SVEN
 	if (Sys_LoadServerDLL(szDllFilename))
 	{
 		Con_DPrintf("%s: Game DLL loaded, now trying to initialize Svengine extensions...\n", __func__);
@@ -1053,6 +1063,7 @@ void LoadEntityDLLs(const char* szBaseDir)
 		g_fSvengineExtensions = FALSE;
 		Con_DPrintf("%s: Game DLL loaded, but no Svengine extensions!!!\n", __func__);
 	}
+#endif //REHLDS_SVEN
 
 	Con_DPrintf("Dll loaded for %s %s\n", gmodinfo.bIsMod ? "mod" : "game", gEntityInterface.pfnGetGameDescription());
 }
@@ -1181,9 +1192,11 @@ void ReleaseEntityDlls(void)
 	}
 	// Since we're not using Sys_LoadModule if REHLDS_FIXES is on (we use Sys_GetModuleHandle instead)
 	// We don't need to "unload" the Game DLL -- we didn't increment the counter
+#ifdef REHLDS_SVEN
 #ifndef REHLDS_FIXES
 	Sys_UnloadServerDLL();
 #endif //!REHLDS_FIXES
+#endif //REHLDS_SVEN
 	g_psvs.dll_initialized = FALSE;
 }
 

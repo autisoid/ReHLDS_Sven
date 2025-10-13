@@ -30,7 +30,11 @@
 
 #include "maintypes.h"
 
+#ifdef REHLDS_SVEN
 #define ZONE_DYNAMIC_SIZE 0x2000000
+#else //!REHLDS_SVEN
+#define ZONE_DYNAMIC_SIZE 0x200000
+#endif //REHLDS_SVEN
 
 typedef struct memblock_s memblock_t;
 typedef struct memzone_s memzone_t;

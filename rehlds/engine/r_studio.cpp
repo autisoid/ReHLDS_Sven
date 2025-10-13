@@ -492,6 +492,10 @@ mstudioanim_t *R_GetAnim(model_t *psubmodel, mstudioseqdesc_t *pseqdesc)
 
 	if (!Cache_Check(&paSequences[pseqdesc->seqgroup]))
 	{
+#ifndef REHLDS_SVEN
+		Con_DPrintf("loading %s\n", pseqgroup->name);
+		COM_LoadCacheFile(pseqgroup->name, &paSequences[pseqdesc->seqgroup]);
+#else //REHLDS_SVEN
 		Q_memset(filename, 0, sizeof(filename));
 		Q_memset(path, 0, sizeof(path));
 
@@ -503,6 +507,7 @@ mstudioanim_t *R_GetAnim(model_t *psubmodel, mstudioseqdesc_t *pseqdesc)
 
 		Con_DPrintf("loading %s\n", path);
 		COM_LoadCacheFile(path, &paSequences[pseqdesc->seqgroup]);
+#endif //REHLDS_SVEN
 	}
 
 	return (mstudioanim_t *)((char *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);

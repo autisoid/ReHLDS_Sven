@@ -52,4 +52,5 @@ typedef struct modinfo_s
 	int num_edicts;
 	qboolean clientcrccheck;
 	qboolean bIgnoreEventFiles;
+	qboolean fEventSystem;
 } modinfo_t;

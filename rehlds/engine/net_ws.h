@@ -106,7 +106,11 @@ typedef struct SPLITPACKET_t
 {
 	int netID;
 	int sequenceNumber;
+#ifdef REHLDS_SVEN
 	unsigned short packetID;
+#else //!REHLDS_SVEN
+	unsigned char packetID;
+#endif //REHLDS_SVEN
 } SPLITPACKET;
 #pragma pack(pop)
 

@@ -30,7 +30,11 @@
 
 #include "maintypes.h"
 
-const int DELTA_MAX_FIELDS = 128;	// 7*8
+#ifdef REHLDS_SVEN
+const int DELTA_MAX_FIELDS = 128;
+#else //!REHLDS_SVEN
+const int DELTA_MAX_FIELDS = 56;	// 7*8
+#endif //REHLDS_SVEN
 
 enum
 {

@@ -256,6 +256,10 @@ model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 	char tmpName[MAX_PATH];
 	int length;
 	CRC32_t currentCRC;
+#ifdef REHLDS_SVEN
+	char* pchDot;
+	char error[MAX_QPATH];
+#endif //REHLDS_SVEN
 
 	if (mod->type == mod_alias || mod->type == mod_studio)
 	{
@@ -284,12 +288,64 @@ model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 		mod->name[sizeof(mod->name) - 1] = '\0';
 	}
 
+#ifdef REHLDS_SVEN
+	if (mod->needload)
+	{
+		if (mod->name[0] != '*' && !FS_FileExists(mod->name))
+		{
+			pchDot = Q_strrchr(mod->name, '.');
+			if (pchDot)
+			{
+				Q_memset(error, 0, sizeof(error));
+				if (Q_stricmp(pchDot, ".mdl"))
+				{
+					if (!Q_stricmp(pchDot, ".spr"))
+					{
+#ifdef REHLDS_FIXES
+						Q_strncpy(error, "sprites/error.spr", sizeof(error) - 1);
+						error[sizeof(error) - 1] = '\0';
+#else //!REHLDS_FIXES
+						Q_strncpy(error, "sprites/error.spr", sizeof(error));
+#endif //REHLDS_FIXES
+					}
+				}
+				else
+				{
+#ifdef REHLDS_FIXES
+					Q_strncpy(error, "models/error.mdl", sizeof(error) - 1);
+					error[sizeof(error) - 1] = '\0';
+#else //!REHLDS_FIXES
+					Q_strncpy(error, "models/error.mdl", sizeof(error));
+#endif //REHLDS_FIXES
+				}
+				if (error[0])
+				{
+					Con_Printf("Error: '%s' not found, swapping it for '%s'.\n", mod->name, error);
+#ifdef REHLDS_FIXES
+					Q_strncpy(mod->name, error, sizeof(mod->name) - 1);
+#else //!REHLDS_FIXES
+					Q_strncpy(mod->name, error, sizeof(mod->name));
+#endif //REHLDS_FIXES
+					mod->name[sizeof(mod->name) - 1] = '\0';
+				}
+			}
+		}
+	}
+#endif //REHLDS_SVEN
+
 	// load the file
-	buf = COM_LoadFileForMe(mod->name, &length);
+	buf = COM_LoadFileForMe(mod->name, &length); // Sven uses 
 	if (!buf)
 	{
+#ifdef REHLDS_SVEN
+		if (crash && developer.value > 1.0)
+#else //!REHLDS_SVEN
 		if (crash)
+#endif //REHLDS_SVEN
 			Sys_Error("%s: %s not found", __func__, mod->name);
+#ifdef REHLDS_SVEN
+		Con_Printf("Error: Could not load '%s': File not found\n", mod->name);
+#endif //REHLDS_SVEN
 		return 0;
 	}
 
@@ -345,7 +401,13 @@ model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 	{
 	case IDPOLYHEADER:
 		// old-format of the model from the quake1
-		Mod_LoadAliasModel(mod, buf);
+#ifndef REHLDS_SVEN
+		Mod_LoadAliasModel(mod, buf); // Sven does "not" support these
+#else //REHLDS_SVEN
+		if (crash || developer.value > 1.0)
+			Sys_Error("Mod_LoadModel: Could not load '%s'. Alias models are not supported!", mod->name);
+		Con_Printf("Error: Could not load '%s'. Alias models are not supported!\n", mod->name);
+#endif //!REHLDS_SVEN
 		break;
 	case IDSPRITEHEADER:
 		Mod_LoadSpriteModel(mod, buf);

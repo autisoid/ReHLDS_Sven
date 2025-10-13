@@ -1069,7 +1069,9 @@ edict_t* EXT_FUNC CreateNamedEntity(int className)
 {
 	edict_t *pedict;
 	ENTITYINIT pEntityInit;
+#ifdef REHLDS_SVEN
 	KeyValueData kvd;
+#endif //REHLDS_SVEN
 
 	if (!className)
 		Sys_Error("%s: Spawned a NULL entity!", __func__);
@@ -1084,6 +1086,12 @@ edict_t* EXT_FUNC CreateNamedEntity(int className)
 	}
 	else
 	{
+#ifndef REHLDS_SVEN
+		ED_Free(pedict);
+		Con_DPrintf("Can't create entity: %s\n", &pr_strings[className]);
+		return NULL;
+	}
+#else //REHLDS_SVEN
 		pEntityInit = GetEntityInit("custom");
 
 		if (!pEntityInit)
@@ -1111,6 +1119,7 @@ error:
 	ED_Free(pedict);
 	Con_DPrintf("Can't create entity: %s\n", &pr_strings[className]);
 	return NULL;
+#endif //!REHLDS_SVEN
 }
 
 void EXT_FUNC PF_Remove_I(edict_t *ed)
@@ -1396,6 +1405,9 @@ void EXT_FUNC EV_Playback(int flags, const edict_t *pInvoker, unsigned short eve
 	int invoker;
 	int slot;
 	int leafnum;
+
+	if (gmodinfo.bIgnoreEventFiles || !gmodinfo.fEventSystem)
+		return;
 
 	if (flags & FEV_CLIENT)
 		return;
@@ -1720,6 +1732,15 @@ int EXT_FUNC PF_precache_generic_I_internal(const char *s)
 			resName, ARRAYSIZE(g_rehlds_sv.precachedGenericResourceNames));
 	}
 
+#ifdef REHLDS_SVEN
+	// xWhitey: For some reason (I don't really want to bother find out why it happens), Sven tries to precache non-existent models, so check first if they exist at all
+	if (!FS_FileExists(resName))
+	{
+		//Con_Printf("Tried to precache a non-existent file: %s\n", resName);
+		return 0;
+	}
+#endif //REHLDS_SVEN
+
 	Q_strcpy(g_rehlds_sv.precachedGenericResourceNames[resCount], resName);
 
 	return g_rehlds_sv.precachedGenericResourceCount++;
@@ -1792,6 +1813,7 @@ int EXT_FUNC PF_NumberOfEntities_I(void)
 	return ent_count;
 }
 
+#ifdef REHLDS_SVEN
 int EXT_FUNC PF_NumberOfPrecachedModels(void)
 {
 	model_t**	pModel;
@@ -1804,6 +1826,7 @@ int EXT_FUNC PF_NumberOfPrecachedModels(void)
 
 	return i;
 }
+#endif //REHLDS_SVEN
 
 char* EXT_FUNC PF_GetInfoKeyBuffer_I(edict_t *e)
 {
@@ -2445,7 +2468,11 @@ void EXT_FUNC PF_MessageEnd_I(void)
 
 		MSG_WriteByte(pBuffer, gMsgType);
 		if (MsgIsVarLength)
+#ifdef REHLDS_SVEN
 			MSG_WriteShort(pBuffer, gMsgBuffer.cursize);
+#else //!REHLDS_SVEN
+			MSG_WriteByte(pBuffer, gMsgBuffer.cursize);
+#endif //REHLDS_SVEN
 		MSG_WriteBuf(pBuffer, gMsgBuffer.cursize, gMsgBuffer.data);
 	}
 #ifdef REHLDS_FIXES
@@ -2533,7 +2560,12 @@ void EXT_FUNC PF_WriteCoord_I(float flValue)
 {
 	if (!gMsgStarted)
 		Sys_Error("%s: called with no active message\n", __func__);
-	MSG_WriteLong(&gMsgBuffer, (int)(flValue * 8.0));
+#ifdef REHLDS_SVEN
+	MSG_WriteLong
+#else //!REHLDS_SVEN
+	MSG_WriteShort
+#endif //REHLDS_SVEN
+		(&gMsgBuffer, (int)(flValue * 8.0));
 }
 
 void EXT_FUNC PF_WriteString_I(const char *sz)

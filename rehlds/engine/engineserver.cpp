@@ -1,5 +1,6 @@
 #include "precompiled.h"
 
+#ifdef REHLDS_SVEN
 #include "engineserver.h"
 
 CEngineServer g_EngineServer;
@@ -51,3 +52,5 @@ const char* CEngineServer::GetAddressOfPlayer(edict_t* _Edict, int _Unnamed) {
 }
 
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CEngineServer, IEngineServer, IENGINESERVER_INTERFACE_VERSION, g_EngineServer);
+
+#endif //REHLDS_SVEN

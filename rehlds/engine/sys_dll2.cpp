@@ -28,7 +28,9 @@
 
 #include "precompiled.h"
 
+#ifdef REHLDS_SVEN
 #include "iserverdll.h"
+#endif //REHLDS_SVEN
 
 IDedicatedExports *dedicated_;
 qboolean g_bIsWin95;
@@ -321,7 +323,57 @@ NOXREF void Sys_ShutdownArgv(void)
 	NOXREFCHECK;
 }
 
-void Sys_InitMemory()
+#ifndef REHLDS_SVEN
+void Sys_InitMemory(void)
+{
+	int i;
+
+	i = COM_CheckParm("-heapsize");
+	if (i && i < com_argc - 1)
+		host_parms.memsize = Q_atoi(com_argv[i + 1]) * 1024;
+
+	if (host_parms.memsize < MINIMUM_WIN_MEMORY)
+	{
+#ifdef _WIN32
+		MEMORYSTATUS lpBuffer;
+		lpBuffer.dwLength = sizeof(MEMORYSTATUS);
+		GlobalMemoryStatus(&lpBuffer);
+
+		if (lpBuffer.dwTotalPhys)
+		{
+			if (lpBuffer.dwTotalPhys < FIFTEEN_MB)
+				Sys_Error("%s: Available memory less than 15MB!!! %i", __func__, host_parms.memsize);
+
+			host_parms.memsize = (int)(lpBuffer.dwTotalPhys >> 1);
+			if (host_parms.memsize < MINIMUM_WIN_MEMORY)
+				host_parms.memsize = MINIMUM_WIN_MEMORY;
+		}
+		else
+			host_parms.memsize = MAXIMUM_WIN_MEMORY;
+
+		if (g_bIsDedicatedServer)
+			host_parms.memsize = DEFAULT_MEMORY;
+#else
+		host_parms.memsize = DEFAULT_MEMORY;
+#endif // _WIN32
+	}
+
+	if (host_parms.memsize > MAXIMUM_DEDICATED_MEMORY)
+		host_parms.memsize = MAXIMUM_DEDICATED_MEMORY;
+
+	if (COM_CheckParm("-minmemory"))
+		host_parms.memsize = MINIMUM_WIN_MEMORY;
+#ifdef _WIN32
+	host_parms.membase = (void *)GlobalAlloc(GMEM_FIXED, host_parms.memsize);
+#else
+	host_parms.membase = Mem_Malloc(host_parms.memsize);
+#endif // _WIN32
+
+	if (!host_parms.membase)
+		Sys_Error("%s: Unable to allocate %.2f MB\n", __func__, (float)host_parms.memsize / (1024.0f * 1024.0f));
+}
+#else //REHLDS_SVEN
+void Sys_InitMemory(void)
 {
 	host_parms.membase = NULL;
 	host_parms.memsize = 0;
@@ -471,6 +523,7 @@ void Sys_InitMemory()
 #endif
 	}
 }
+#endif //!REHLDS_SVEN
 
 void Sys_ShutdownMemory(void)
 {
@@ -668,7 +721,7 @@ void ClearIOStates(void)
 ====================
 Sys_LoadServerDLL
 
-Attempts to initialize Svengine-exclusive extensions to the Game DLL (CServerDLL klass i.e. the interface)
+Attempts to initialize Svengine-exclusive extensions to the Game DLL (CServerDLL class i.e. the interface)
 ====================
 */
 bool Sys_LoadServerDLL( const char* modulename )

@@ -91,6 +91,7 @@ bool BEnabledHDAddon(void)
 	return (registry->ReadInt("hdmodels", 1) > 0);
 }
 
+#ifdef REHLDS_SVEN
 bool BEnableAddonsFolder(void)
 {
 	if (COM_CheckParm("-noaddons"))
@@ -100,6 +101,17 @@ bool BEnableAddonsFolder(void)
 
 	return (registry->ReadInt("addons", 1) > 0);
 }
+#else //!REHLDS_SVEN
+bool BEnableAddonsFolder(void)
+{
+	if (COM_CheckParm("-addons"))
+	{
+		return false;
+	}
+
+	return (registry->ReadInt("addons_folder", 1) > 0);
+}
+#endif //REHLDS_SVEN
 
 void Host_SetHDModels_f(void)
 {

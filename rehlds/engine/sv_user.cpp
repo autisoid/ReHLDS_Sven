@@ -111,7 +111,9 @@ void SV_ParseConsistencyResponse(client_t *pSenderClient)
 		return;
 	}
 
-	//COM_UnMunge(&net_message.data[msg_readcount], value, g_psvs.spawncount);
+#ifndef REHLDS_SVEN
+	COM_UnMunge(&net_message.data[msg_readcount], value, g_psvs.spawncount);
+#endif //!REHLDS_SVEN
 	MSG_StartBitReading(&net_message);
 
 	while (MSG_ReadBits(1))
@@ -146,7 +148,9 @@ void SV_ParseConsistencyResponse(client_t *pSenderClient)
 			MSG_ReadBitData(cmins, 12);
 			MSG_ReadBitData(cmaxs, 12);
 			Q_memcpy(resbuffer, r->rguc_reserved, sizeof(resbuffer));
-			//COM_UnMunge(resbuffer, sizeof(resbuffer), g_psvs.spawncount);
+#ifndef REHLDS_SVEN
+			COM_UnMunge(resbuffer, sizeof(resbuffer), g_psvs.spawncount);
+#endif //!REHLDS_SVEN
 			FORCE_TYPE ft = (FORCE_TYPE)resbuffer[0];
 			if (ft == force_model_samebounds)
 			{
@@ -372,7 +376,11 @@ void SV_SendConsistencyList(sizebuf_t *msg)
 			if (delta > 31)
 			{
 				MSG_WriteBits(0, 1);
-				MSG_WriteBits(i, 16);	// LIMIT: Here it write index, not a diff, with resolution of 10 bits. So, it limits not adjacent index to 1023 max.
+#ifdef REHLDS_SVEN
+				MSG_WriteBits(i, 16);	
+#else //!REHLDS_SVEN
+				MSG_WriteBits(i, 10);	// LIMIT: Here it write index, not a diff, with resolution of 10 bits. So, it limits not adjacent index to 1023 max.
+#endif //REHLDS_SVEN
 			}
 			else
 			{
@@ -786,7 +794,7 @@ void SV_RunCmd(usercmd_t *ucmd, int random_seed)
 		{
 			if (host_client->m_flLastUsrcmdsWarningPrintTime + 1.0f < realtime)
 			{
-				Con_Printf("%s: client \"%s\" is going over sv_rehlds_maxusrcmdprocessticks!\n", __func__, host_client->name);
+				Con_DPrintf("%s: client \"%s\" is going over sv_rehlds_maxusrcmdprocessticks!\n", __func__, host_client->name);
 				host_client->m_flLastUsrcmdsWarningPrintTime = realtime;
 			}
 
@@ -1535,12 +1543,19 @@ void SV_ParseStringCommand(client_t *pSenderClient)
 	}
 }
 
+#ifdef REHLDS_SVEN
 void SV_ParseDelta(client_t *pSenderClient)
 {
 	MSG_StartBitReading(&net_message);
 	host_client->delta_sequence = MSG_ReadBits(16);
 	MSG_EndBitReading(&net_message);
 }
+#else //!REHLDS_SVEN
+void SV_ParseDelta(client_t* pSenderClient)
+{
+	host_client->delta_sequence = MSG_ReadByte();
+}
+#endif //REHLDS_SVEN
 
 void EXT_FUNC SV_EstablishTimeBase_mod(IGameClient *cl, usercmd_t *cmds, int dropped, int numbackup, int numcmds)
 {
@@ -1552,6 +1567,7 @@ void SV_EstablishTimeBase(client_t *cl, usercmd_t *cmds, int dropped, int numbac
 	return g_RehldsHookchains.m_SV_EstablishTimeBase.callChain(SV_EstablishTimeBase_mod, GetRehldsApiClient(cl), cmds, dropped, numbackup, numcmds);
 }
 
+// TODO: This is different for sven
 void SV_EstablishTimeBase_internal(client_t *cl, usercmd_t *cmds, int dropped, int numbackup, int numcmds)
 {
 	int		i;
@@ -1624,6 +1640,18 @@ void SV_ParseMove(client_t *pSenderClient)
 	mlen = MSG_ReadByte();
 	cbchecksum = MSG_ReadByte();
 
+#ifndef REHLDS_SVEN // this check doesn't exist in sven at all
+	if (mlen <= 0 || !SZ_HasSpaceToRead(&net_message, mlen))
+	{
+		msg_badread = TRUE;
+		Con_DPrintf("%s:  %s:%s invalid length: %d\n", __func__, host_client->name, NET_AdrToString(host_client->netchan.remote_address), mlen);
+		SV_DropClient(host_client, FALSE, "Invalid length");
+		return;
+	}
+
+	COM_UnMunge(&net_message.data[placeholder + 1], mlen, host_client->netchan.incoming_sequence);
+#endif //!REHLDS_SVEN
+
 	packetLossByte = MSG_ReadByte();
 	numbackup = MSG_ReadByte();
 	numcmds = MSG_ReadByte();
@@ -1655,6 +1683,18 @@ void SV_ParseMove(client_t *pSenderClient)
 		Con_Printf("Client %s:%s sent a bogus command packet\n", host_client->name, NET_AdrToString(host_client->netchan.remote_address));
 		return;
 	}
+
+#ifndef REHLDS_SVEN
+	cbpktchecksum = COM_BlockSequenceCRCByte(&net_message.data[placeholder + 1], msg_readcount - placeholder - 1, host_client->netchan.incoming_sequence);
+	if (cbpktchecksum != cbchecksum)
+	{
+		Con_DPrintf("Failed command checksum for %s:%s\n", host_client->name, NET_AdrToString(host_client->netchan.remote_address));
+		msg_badread = 1;
+		return;
+	}
+#else //REHLDS_SVEN
+	(void)cbpktchecksum; // shut up the compiler about "unused variable"
+#endif //!REHLDS_SVEN
 
 	host_client->packet_loss = packet_loss;
 	if (!g_psv.paused && (g_psvs.maxclients > 1 || !key_dest) && !(sv_player->v.flags & FL_FROZEN))

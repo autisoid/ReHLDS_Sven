@@ -275,7 +275,7 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 
 				Q_strcpy(keyname, "angles");
 			}
-#ifndef REHLDS_SVEN
+#ifndef REHLDS_SVEN // disabling this fix in sven because if it is enabled something will go very wrong
 #ifdef REHLDS_FIXES
 			else if (!Q_strcmp(keyname, "model"))
 			{

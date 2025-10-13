@@ -1,5 +1,6 @@
 #include "precompiled.h"
 
+#ifdef REHLDS_SVEN
 #include "iserverdll.h"
 
 IServerDLL* g_pServerDLL = NULL;
@@ -117,3 +118,5 @@ void SV_OnLevelChange( const char *_MapName )
 	if (g_pServerDLL)
 		g_pServerDLL->OnChangeLevel(_MapName);
 }
+
+#endif //REHLDS_SVEN

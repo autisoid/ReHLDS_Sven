@@ -574,7 +574,11 @@ void Host_ShutdownServer(qboolean crash)
 	if (!g_psv.active)
 		return;
 
+#ifdef REHLDS_SVEN
 	SV_ServerShutdown(NULL);
+#else //!REHLDS_SVEN
+	SV_ServerShutdown();
+#endif //REHLDS_SVEN
 	g_psv.active = FALSE;
 	NET_ClearLagData(TRUE, TRUE);
 
@@ -1030,8 +1034,13 @@ void Host_Version(void)
 {
 	char szFileName[MAX_PATH];
 
+#ifdef REHLDS_SVEN
 	Q_strcpy(gpszVersionString, "5.0.18");
 	Q_strcpy(gpszProductString, "svencoop");
+#else //!REHLDS_SVEN
+	Q_strcpy(gpszVersionString, "1.0.14");
+	Q_strcpy(gpszProductString, "valve");
+#endif //REHLDS_SVEN
 	Q_strcpy(szFileName, "steam.inf");
 	FileHandle_t fp = FS_Open(szFileName, "r");
 	if (fp)
